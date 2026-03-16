@@ -68,6 +68,94 @@ get_shell_rc() {
     fi
 }
 
+install_system_deps() {
+    local missing=()
+
+    for cmd in jq git; do
+        if ! command -v "$cmd" &>/dev/null; then
+            missing+=("$cmd")
+        fi
+    done
+
+    if [[ ${#missing[@]} -eq 0 ]]; then
+        log_good "Required system dependencies already installed (jq, git)"
+        return 0
+    fi
+
+    log_info "Missing system dependencies: ${missing[*]}"
+
+    # Detect package manager
+    local pkg_mgr=""
+    local install_cmd=""
+    if command -v apt-get &>/dev/null; then
+        pkg_mgr="apt-get"
+        install_cmd="sudo apt-get install -y"
+    elif command -v brew &>/dev/null; then
+        pkg_mgr="brew"
+        install_cmd="brew install"
+    elif command -v dnf &>/dev/null; then
+        pkg_mgr="dnf"
+        install_cmd="sudo dnf install -y"
+    elif command -v pacman &>/dev/null; then
+        pkg_mgr="pacman"
+        install_cmd="sudo pacman -S --noconfirm"
+    elif command -v apk &>/dev/null; then
+        pkg_mgr="apk"
+        install_cmd="sudo apk add"
+    fi
+
+    if [[ -z "$pkg_mgr" ]]; then
+        log_bad "Could not detect package manager — install manually: ${missing[*]}"
+        return 1
+    fi
+
+    log_info "Installing ${missing[*]} via ${pkg_mgr}..."
+    if $install_cmd "${missing[@]}"; then
+        log_good "System dependencies installed"
+    else
+        log_bad "Failed to install ${missing[*]} — install them manually and re-run"
+        return 1
+    fi
+}
+
+install_python_deps() {
+    local venv_dir="${REPO_ROOT}/.venv"
+    local requirements="${SCRIPT_DIR}/requirements.txt"
+
+    if [[ ! -f "$requirements" ]]; then
+        log_dim "No requirements.txt found — skipping Python setup"
+        return 0
+    fi
+
+    if ! command -v python3 &>/dev/null; then
+        log_bad "python3 not found — install Python 3 and re-run"
+        return 1
+    fi
+
+    if [[ ! -d "$venv_dir" ]]; then
+        log_info "Creating Python venv at ${venv_dir}..."
+        if ! python3 -m venv "$venv_dir"; then
+            log_bad "Failed to create venv — you may need to install python3-venv"
+            return 1
+        fi
+        log_good "Venv created"
+    else
+        log_good "Venv already exists at ${venv_dir}"
+    fi
+
+    log_info "Installing Python dependencies..."
+    if "${venv_dir}/bin/pip" install --quiet -r "$requirements"; then
+        log_good "Python dependencies installed"
+    else
+        log_bad "Failed to install Python dependencies"
+        return 1
+    fi
+}
+
+# ─── Repo root detection ─────────────────────────────────────────
+
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 install_patchboard() {
     local global="${1:-false}"
     local install_dir
@@ -77,6 +165,12 @@ install_patchboard() {
     shell_rc=$(get_shell_rc)
 
     print_header
+
+    # Install dependencies
+    install_system_deps || true
+    echo ""
+    install_python_deps || true
+    echo ""
 
     # Ensure script is executable
     chmod +x "$PATCHBOARD_SCRIPT"
