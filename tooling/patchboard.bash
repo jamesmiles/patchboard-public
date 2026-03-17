@@ -13,6 +13,7 @@
 #   cli          Configure default AI CLI
 #   branch       Configure main branch
 #   status       Show current settings and session state
+#   upgrade      Pull latest tooling from the public repo
 #
 # Install: .patchboard/tooling/install.sh
 
@@ -668,6 +669,81 @@ cmd_status() {
     echo ""
 }
 
+# ─── Upgrade ──────────────────────────────────────────────────────
+
+PATCHBOARD_PUBLIC_REPO="https://github.com/jamesmiles/patchboard-public.git"
+
+cmd_upgrade() {
+    local force=false
+    [[ "${1:-}" == "force" ]] && force=true
+
+    print_box_header "Upgrade"
+
+    local local_version="$PATCHBOARD_VERSION"
+    local tooling_dest="${REPO_ROOT}/.patchboard/tooling"
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+
+    # Clean up temp dir on exit
+    trap 'rm -rf "$tmp_dir"' RETURN
+
+    # Fetch the remote VERSION to compare
+    log_info "Checking for updates..."
+    if ! git clone --depth 1 --filter=blob:none --sparse "$PATCHBOARD_PUBLIC_REPO" "$tmp_dir/repo" 2>/dev/null; then
+        log_bad "Failed to fetch from ${PATCHBOARD_PUBLIC_REPO}"
+        return 1
+    fi
+
+    # Sparse-checkout just the tooling folder
+    git -C "$tmp_dir/repo" sparse-checkout set tooling 2>/dev/null
+    git -C "$tmp_dir/repo" checkout 2>/dev/null
+
+    local remote_version
+    remote_version="$(cat "$tmp_dir/repo/tooling/VERSION" 2>/dev/null || echo "unknown")"
+
+    print_kv "Installed" "v${local_version}"
+    print_kv "Latest" "v${remote_version}"
+    echo ""
+
+    if [[ "$remote_version" == "unknown" ]]; then
+        log_bad "Could not determine remote version"
+        return 1
+    fi
+
+    if [[ "$local_version" == "$remote_version" ]]; then
+        log_good "Already up to date."
+        echo ""
+        return 0
+    fi
+
+    # Confirm unless --force
+    if [[ "$force" != "true" ]]; then
+        log_warn "Upgrading ${YELLOW}v${local_version}${NC} → ${YELLOW}v${remote_version}${NC}"
+        echo ""
+        echo -e "  ${DIM}This will overwrite any local modifications to .patchboard/tooling/*${NC}"
+        echo ""
+        if ! confirm "Proceed with upgrade?"; then
+            log_dim "Cancelled."
+            return 0
+        fi
+        echo ""
+    fi
+
+    # Copy new tooling into place
+    log_info "Installing v${remote_version}..."
+    mkdir -p "$tooling_dest"
+    rsync -a --delete "$tmp_dir/repo/tooling/" "$tooling_dest/"
+    chmod +x "$tooling_dest/patchboard.bash"
+    chmod +x "$tooling_dest/install.sh"
+
+    log_good "Tooling updated to v${remote_version}"
+
+    # Re-run install to update symlinks, deps, etc.
+    log_info "Running install..."
+    echo ""
+    bash "$tooling_dest/install.sh"
+}
+
 # ─── Help / usage ─────────────────────────────────────────────────
 
 cmd_help() {
@@ -690,6 +766,7 @@ cmd_help() {
     table_row "cli [name]" "Configure default CLI (claude/copilot/auto)"
     table_row "branch [name]" "Configure main branch"
     table_row "status" "Show settings and session state"
+    table_row "upgrade [force]" "Pull latest tooling from public repo"
     table_row "help" "Show this help"
     TABLE_INDENT="  "
     echo ""
@@ -722,6 +799,10 @@ cmd_help() {
     echo ""
     echo -e "    ${DIM}# Auto-poll every 30s, max 5 sessions${NC}"
     echo -e "    patchboard auto 30 5"
+    echo ""
+    echo -e "    ${DIM}# Upgrade tooling to latest version${NC}"
+    echo -e "    patchboard upgrade"
+    echo -e "    patchboard upgrade force"
     echo ""
 }
 
@@ -770,6 +851,7 @@ case "$command" in
     cli)              cmd_cli "$@" ;;
     branch|br)        cmd_branch "$@" ;;
     status|st)        cmd_status "$@" ;;
+    upgrade|up)       cmd_upgrade "$@" ;;
     help|--help|-h)   cmd_help "$@" ;;
     *)
         log_bad "Unknown command: ${command}"

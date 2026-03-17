@@ -15,6 +15,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PATCHBOARD_SCRIPT="${SCRIPT_DIR}/patchboard.bash"
 COMPLETIONS_SCRIPT="${SCRIPT_DIR}/patchboard-completions.bash"
+PATCHBOARD_VERSION="$(cat "${SCRIPT_DIR}/VERSION" 2>/dev/null || echo "unknown")"
 
 # Brand colors
 BRAND='\033[38;5;51m'
@@ -226,7 +227,7 @@ install_patchboard() {
     fi
 
     echo ""
-    echo -e "  ${BRAND_BOLD}Installation complete!${NC}"
+    echo -e "  ${BRAND_BOLD}Patchboard v${PATCHBOARD_VERSION} installed!${NC}"
     echo ""
     echo -e "  ${DIM}Reload your shell or run:${NC}"
     echo -e "    ${CYAN}source ${shell_rc}${NC}"

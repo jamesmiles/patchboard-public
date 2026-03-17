@@ -15,9 +15,9 @@ _patchboard_completions() {
 
     # First argument = command
     if [[ $COMP_CWORD -eq 1 ]]; then
-        local commands="version healthcheck list select start enqueue spawn auto cli branch status help"
+        local commands="version healthcheck list select start enqueue spawn auto cli branch status upgrade help"
         # Include short aliases
-        commands+=" v hc ls sel run eq sp poll br st"
+        commands+=" v hc ls sel run eq sp poll br st up"
         COMPREPLY=( $(compgen -W "$commands" -- "$cur") )
         return 0
     fi
@@ -95,6 +95,10 @@ _patchboard_completions() {
                 # Poll interval
                 COMPREPLY=( $(compgen -W "10 30 60 120 300" -- "$cur") )
             fi
+            ;;
+
+        upgrade|up)
+            COMPREPLY=( $(compgen -W "force" -- "$cur") )
             ;;
     esac
 
