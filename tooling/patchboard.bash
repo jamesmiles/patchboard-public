@@ -8,10 +8,7 @@
 #   version      Display tooling version
 #   healthcheck  Run system healthchecks
 #   list         List sessions, tasks, or pull requests
-#   select       Interactive session picker
-#   start        Start a session (claim + run agent)
-#   enqueue      Create a new session from a task or PR
-#   spawn        Enqueue + select + start a session
+#   start [id]   Start a session (accepts session/task/PR id, or interactive)
 #   auto         Auto-poll and process queued sessions
 #   cli          Configure default AI CLI
 #   branch       Configure main branch
@@ -161,73 +158,82 @@ _list_prs() {
     print_pr_table "$prs"
 }
 
-cmd_select() {
-    _check_jq
-    local session_id="${1:-}"
-
-    if [[ -n "$session_id" ]]; then
-        # Direct session ID provided
-        SELECTED_SESSION_ID="$session_id"
-        log_good "Selected: ${session_id}"
-    else
-        # Interactive picker
-        print_section "Select Session"
-        if ! select_session; then
-            return 1
-        fi
-    fi
-
-    # Write selected session to config
-    config_set "selected_session" "$SELECTED_SESSION_ID"
-    log_good "Session ${SELECTED_SESSION_ID} selected"
-
-    # Show session details
-    echo ""
-    local sf
-    sf=$(ensure_session_dir "$SELECTED_SESSION_ID")
-    if [[ -f "$sf" ]]; then
-        local status tasks workspace prompt model
-        status=$(jq -r '.status // "?"' "$sf")
-        tasks=$(jq -r 'if .task_ids then (.task_ids | join(", ")) else .task_id // "" end' "$sf")
-        workspace=$(jq -r '.workspace_id // "—"' "$sf")
-        prompt=$(jq -r '.prompt // ""' "$sf" | head -3)
-        model=$(jq -r '.model // "—"' "$sf")
-
-        print_kv "Status" "$(echo -e "$(status_badge "$status")")"
-        print_kv "Tasks" "$tasks"
-        print_kv "Workspace" "$workspace"
-        print_kv "Model" "$model"
-        echo ""
-        echo -e "  ${DIM}Prompt:${NC}"
-        echo "$prompt" | head -5 | while IFS= read -r line; do
-            echo -e "    ${DIM}${line}${NC}"
-        done
-    fi
-    echo ""
-}
-
 cmd_start() {
     _check_jq
-    local session_id="${1:-}"
-    local cli_override="${2:-}"
-    local model_override="${3:-}"
+    local id="${1:-}"
 
-    # If no session given, use selected or launch picker
-    if [[ -z "$session_id" ]]; then
-        session_id=$(config_get "selected_session")
-        if [[ -z "$session_id" ]]; then
-            print_section "Start Session"
-            log_info "No session selected — launching picker..."
+    # ── Detect ID type and route ─────────────────────────────────
+    if [[ -n "$id" ]]; then
+        case "$id" in
+            se-*)
+                _start_session "$id"
+                return $?
+                ;;
+            [TE]-[0-9]*)
+                _start_from_task "$id"
+                return $?
+                ;;
+            \#[0-9]*|[0-9]*)
+                local pr_num="${id#\#}"
+                _start_from_pr "$pr_num"
+                return $?
+                ;;
+            *)
+                log_bad "Unrecognised ID format: ${id}"
+                echo -e "  Expected: ${CYAN}se-*${NC} (session), ${CYAN}T-*${NC} (task), or ${CYAN}#N${NC} / ${CYAN}N${NC} (PR)"
+                return 1
+                ;;
+        esac
+    fi
+
+    # ── No ID: interactive flow ──────────────────────────────────
+    print_box_header "Start"
+
+    echo -e "  ${BRAND}What do you want to work on?${NC}"
+    echo ""
+    echo -e "    ${CYAN}s)${NC} Existing session"
+    echo -e "    ${CYAN}t)${NC} Task"
+    echo -e "    ${CYAN}p)${NC} Pull Request"
+    echo ""
+    read -p "  Select [s/t/p]: " source_type
+
+    case "$source_type" in
+        s|S|session)
+            print_section "Select Session"
             if ! select_session; then
                 return 1
             fi
-            session_id="$SELECTED_SESSION_ID"
-        fi
-    fi
+            _start_session "$SELECTED_SESSION_ID"
+            ;;
+        t|T|task)
+            print_section "Select Task"
+            if ! select_task; then
+                return 1
+            fi
+            _start_from_task "$SELECTED_TASK_ID"
+            ;;
+        p|P|pr)
+            print_section "Select Pull Request"
+            if ! select_pr; then
+                return 1
+            fi
+            _start_from_pr "$SELECTED_PR_NUMBER"
+            ;;
+        *)
+            log_bad "Invalid selection."
+            return 1
+            ;;
+    esac
+}
+
+# ─── Start helpers ───────────────────────────────────────────────
+
+# Start an existing session by ID
+_start_session() {
+    local session_id="$1"
 
     print_box_header "Starting  ${session_id}"
 
-    # Show what we're about to do
     local sf
     sf=$(ensure_session_dir "$session_id")
     local status tasks cli model
@@ -236,8 +242,8 @@ cmd_start() {
     local session_model
     session_model=$(jq -r '.model // empty' "$sf")
 
-    cli="${cli_override:-$(config_resolve_cli "$session_model")}"
-    model="${model_override:-${session_model:-$(config_default_model "$cli")}}"
+    cli=$(config_resolve_cli "$session_model")
+    model="${session_model:-$(config_default_model "$cli")}"
 
     print_kv "Session" "$session_id"
     print_kv "Status" "$status"
@@ -247,14 +253,7 @@ cmd_start() {
     print_kv "Timeout" "${AGENT_TIMEOUT}s"
     echo ""
 
-    # Permissions warning
-    echo -e "  ${YELLOW}Permissions:${NC}"
-    if [[ "$cli" == "claude" ]]; then
-        echo -e "    ${BAD}--dangerously-skip-permissions${NC} (full access)"
-    else
-        echo -e "    ${BAD}--allow-all-tools${NC} (full access)"
-    fi
-    echo ""
+    _show_permissions "$cli"
 
     if ! confirm "Proceed?"; then
         log_dim "Cancelled."
@@ -262,19 +261,199 @@ cmd_start() {
     fi
 
     echo ""
-
-    # Ensure on main branch and pull latest
     ensure_on_main
     git -C "$REPO_ROOT" pull --rebase --quiet 2>/dev/null || true
 
-    # Run session
     run_session "$session_id" "$cli" "$model"
     local rc=$?
-
-    # Clear selected session
     config_set "selected_session" ""
-
     return $rc
+}
+
+# Create a new session from a task ID and start it
+_start_from_task() {
+    local task_id="$1"
+    local task_ids=("$task_id")
+    local template_vars=("TASK_ID=$task_id")
+
+    # Look up task title if discoverable
+    local title=""
+    local tasks_json
+    tasks_json=$(discover_tasks)
+    title=$(echo "$tasks_json" | jq -r --arg id "$task_id" '.[] | select(.id == $id) | .title // ""')
+    [[ -n "$title" ]] && template_vars+=("TITLE=$title")
+
+    log_good "Task: ${task_id}${title:+ — ${title}}"
+
+    _enqueue_and_run task_ids template_vars "" ""
+}
+
+# Create a new session from a PR number and start it
+_start_from_pr() {
+    local pr_num="$1"
+    local template_vars=("PR_NUMBER=$pr_num")
+
+    # Look up PR details
+    local pr_branch="" pr_title=""
+    if command -v gh &>/dev/null; then
+        pr_branch=$(gh pr view "$pr_num" --json headRefName --jq '.headRefName' 2>/dev/null || echo "")
+        pr_title=$(gh pr view "$pr_num" --json title --jq '.title' 2>/dev/null || echo "")
+    fi
+    [[ -n "$pr_branch" ]] && template_vars+=("BRANCH=$pr_branch")
+    [[ -n "$pr_title" ]] && template_vars+=("TITLE=$pr_title")
+
+    log_good "PR: #${pr_num}${pr_title:+ — ${pr_title}}"
+
+    # Extract task IDs from PR title/branch
+    local task_ids=()
+    local pr_task_ids
+    pr_task_ids=$(echo "$pr_title $pr_branch" | grep -oE '[TE]-[0-9]+' | sort -u)
+    while IFS= read -r tid; do
+        [[ -n "$tid" ]] && task_ids+=("$tid")
+    done <<< "$pr_task_ids"
+
+    _enqueue_and_run task_ids template_vars "$pr_num" "$pr_branch"
+}
+
+# Shared: pick workspace/prompt/model, create session, and run it.
+# Usage: _enqueue_and_run <task_ids_nameref> <template_vars_nameref> [pr_number] [pr_branch]
+_enqueue_and_run() {
+    local -n _task_ids=$1
+    local -n _template_vars=$2
+    local pr_number="${3:-}"
+    local pr_branch="${4:-}"
+
+    # ── Select agent workspace ───────────────────────────────────
+    print_section "Agent Workspace"
+    if ! select_workspace; then
+        return 1
+    fi
+    local workspace="$SELECTED_WORKSPACE"
+
+    # ── Select prompt ────────────────────────────────────────────
+    print_section "Prompt"
+    if ! select_prompt "$workspace"; then
+        return 1
+    fi
+
+    local prompt
+    prompt=$(render_prompt "$SELECTED_PROMPT" "${_template_vars[@]}")
+
+    # Prepend agent role instruction if index.md exists
+    local agent_index="${AGENTS_DIR}/${workspace}/index.md"
+    if [[ -f "$agent_index" ]]; then
+        prompt="Read .patchboard/agents/${workspace}/index.md and confirm that you have read this and understand your role.
+
+${prompt}"
+    fi
+
+    # ── Select model ─────────────────────────────────────────────
+    echo ""
+    prompt_choice "Model" "sonnet" "opus" "haiku"
+    local model="$REPLY"
+
+    # ── Create session file ──────────────────────────────────────
+    local session_id uuid now
+    uuid=$(generate_uuid)
+    session_id="se-${uuid:0:12}"
+    now=$(date -u +%FT%TZ)
+
+    local session_dir="${SESSION_DIR}/${session_id}"
+    mkdir -p "$session_dir"
+
+    local task_ids_json
+    if [[ ${#_task_ids[@]} -gt 0 ]]; then
+        task_ids_json=$(printf '%s\n' "${_task_ids[@]}" | jq -R . | jq -s .)
+    else
+        task_ids_json="[]"
+    fi
+
+    local session_json
+    session_json=$(jq -n \
+        --arg sid "$session_id" \
+        --arg status "queued" \
+        --arg provider "self_hosted" \
+        --argjson task_ids "$task_ids_json" \
+        --arg workspace "$workspace" \
+        --arg model "$model" \
+        --arg prompt "$prompt" \
+        --arg now "$now" \
+        '{
+            session_id: $sid,
+            status: $status,
+            provider: $provider,
+            task_ids: $task_ids,
+            workspace_id: $workspace,
+            model: $model,
+            prompt: $prompt,
+            created_at: $now,
+            updated_at: $now,
+            config: {}
+        }')
+
+    echo "$session_json" > "${session_dir}/session.json"
+
+    # ── Summary and confirm ──────────────────────────────────────
+    echo ""
+    print_section "Session Summary"
+    print_kv "Session" "$session_id"
+    print_kv "Source" "$(if [[ -n "$pr_number" ]]; then echo "PR #${pr_number}"; else echo "${_task_ids[*]}"; fi)"
+    print_kv "Workspace" "$workspace"
+    print_kv "Model" "$model"
+    print_kv "Tasks" "$(IFS=', '; echo "${_task_ids[*]}")"
+    echo ""
+    echo -e "  ${DIM}Prompt (first 3 lines):${NC}"
+    echo "$prompt" | head -3 | while IFS= read -r line; do
+        echo -e "    ${DIM}${line}${NC}"
+    done
+    echo ""
+
+    local cli
+    cli=$(config_resolve_cli "$model")
+    _show_permissions "$cli"
+
+    if ! confirm "Create session and start?"; then
+        rm -rf "$session_dir"
+        log_dim "Cancelled."
+        return 1
+    fi
+
+    # ── Git commit + push ────────────────────────────────────────
+    git -C "$REPO_ROOT" add "${session_dir}/"
+    git -C "$REPO_ROOT" commit -m "enqueue: session ${session_id} (${workspace})" --quiet
+
+    log_info "Pushing session..."
+    if ! git -C "$REPO_ROOT" push --quiet 2>/dev/null; then
+        log_warn "Push failed, pulling and retrying..."
+        git -C "$REPO_ROOT" pull --rebase --quiet 2>/dev/null || true
+        if ! git -C "$REPO_ROOT" push --quiet 2>/dev/null; then
+            log_bad "Failed to push session."
+            return 1
+        fi
+    fi
+
+    log_good "Session ${session_id} enqueued."
+    echo ""
+
+    # ── Run it ───────────────────────────────────────────────────
+    ensure_on_main
+    git -C "$REPO_ROOT" pull --rebase --quiet 2>/dev/null || true
+
+    run_session "$session_id" "$cli" "$model"
+    local rc=$?
+    config_set "selected_session" ""
+    return $rc
+}
+
+_show_permissions() {
+    local cli="$1"
+    echo -e "  ${YELLOW}Permissions:${NC}"
+    if [[ "$cli" == "claude" ]]; then
+        echo -e "    ${BAD}--dangerously-skip-permissions${NC} (full access)"
+    else
+        echo -e "    ${BAD}--allow-all-tools${NC} (full access)"
+    fi
+    echo ""
 }
 
 cmd_auto() {
@@ -489,195 +668,6 @@ cmd_status() {
     echo ""
 }
 
-# ─── Enqueue / Spawn ──────────────────────────────────────────────
-
-# Shared enqueue logic. Sets ENQUEUED_SESSION_ID on success.
-_do_enqueue() {
-    _check_jq
-    ENQUEUED_SESSION_ID=""
-
-    print_box_header "Enqueue Session"
-
-    # ── Step 1: Pick source (task or PR) ────────────────────────
-    echo -e "  ${BRAND}Source${NC}"
-    echo ""
-    echo -e "    ${CYAN}t)${NC} Task"
-    echo -e "    ${CYAN}p)${NC} Pull Request"
-    echo ""
-    read -p "  Select [t/p]: " source_type
-
-    local task_ids=()
-    local pr_number=""
-    local pr_branch=""
-    local item_title=""
-    local template_vars=()
-
-    case "$source_type" in
-        t|T|task)
-            print_section "Select Task"
-            if ! select_task; then
-                return 1
-            fi
-            task_ids+=("$SELECTED_TASK_ID")
-            item_title="$SELECTED_TASK_TITLE"
-            template_vars+=("TASK_ID=$SELECTED_TASK_ID" "TITLE=$SELECTED_TASK_TITLE")
-            ;;
-        p|P|pr)
-            print_section "Select Pull Request"
-            if ! select_pr; then
-                return 1
-            fi
-            pr_number="$SELECTED_PR_NUMBER"
-            pr_branch="$SELECTED_PR_BRANCH"
-            item_title="$SELECTED_PR_TITLE"
-            template_vars+=("PR_NUMBER=$SELECTED_PR_NUMBER" "BRANCH=$SELECTED_PR_BRANCH" "TITLE=$SELECTED_PR_TITLE")
-
-            # Try to extract task IDs from PR title or branch
-            local pr_task_ids
-            pr_task_ids=$(echo "$SELECTED_PR_TITLE $SELECTED_PR_BRANCH" | grep -oE '[TE]-[0-9]+' | sort -u)
-            while IFS= read -r tid; do
-                [[ -n "$tid" ]] && task_ids+=("$tid")
-            done <<< "$pr_task_ids"
-            ;;
-        *)
-            log_bad "Invalid source type."
-            return 1
-            ;;
-    esac
-
-    # ── Step 2: Select agent workspace ──────────────────────────
-    print_section "Agent Workspace"
-    if ! select_workspace; then
-        return 1
-    fi
-    local workspace="$SELECTED_WORKSPACE"
-
-    # ── Step 3: Select prompt ───────────────────────────────────
-    print_section "Prompt"
-    if ! select_prompt "$workspace"; then
-        return 1
-    fi
-
-    # Render template variables
-    local prompt
-    prompt=$(render_prompt "$SELECTED_PROMPT" "${template_vars[@]}")
-
-    # Prepend agent role instruction if index.md exists
-    local agent_index="${AGENTS_DIR}/${workspace}/index.md"
-    if [[ -f "$agent_index" ]]; then
-        prompt="Read .patchboard/agents/${workspace}/index.md and confirm that you have read this and understand your role.
-
-${prompt}"
-    fi
-
-    # ── Step 4: Select model ────────────────────────────────────
-    echo ""
-    prompt_choice "Model" "sonnet" "opus" "haiku"
-    local model="$REPLY"
-
-    # ── Step 5: Create session file ─────────────────────────────
-    local session_id
-    local uuid
-    uuid=$(generate_uuid)
-    session_id="se-${uuid:0:12}"
-
-    local now
-    now=$(date -u +%FT%TZ)
-
-    local session_dir="${SESSION_DIR}/${session_id}"
-    mkdir -p "$session_dir"
-
-    local task_ids_json
-    if [[ ${#task_ids[@]} -gt 0 ]]; then
-        task_ids_json=$(printf '%s\n' "${task_ids[@]}" | jq -R . | jq -s .)
-    else
-        task_ids_json="[]"
-    fi
-
-    local session_json
-    session_json=$(jq -n \
-        --arg sid "$session_id" \
-        --arg status "queued" \
-        --arg provider "self_hosted" \
-        --argjson task_ids "$task_ids_json" \
-        --arg workspace "$workspace" \
-        --arg model "$model" \
-        --arg prompt "$prompt" \
-        --arg now "$now" \
-        '{
-            session_id: $sid,
-            status: $status,
-            provider: $provider,
-            task_ids: $task_ids,
-            workspace_id: $workspace,
-            model: $model,
-            prompt: $prompt,
-            created_at: $now,
-            updated_at: $now,
-            config: {}
-        }')
-
-    echo "$session_json" > "${session_dir}/session.json"
-
-    # ── Step 6: Summary and confirm ─────────────────────────────
-    echo ""
-    print_section "Session Summary"
-    print_kv "Session" "$session_id"
-    print_kv "Source" "$(if [[ -n "$pr_number" ]]; then echo "PR #${pr_number}"; else echo "${task_ids[*]}"; fi)"
-    print_kv "Workspace" "$workspace"
-    print_kv "Model" "$model"
-    print_kv "Tasks" "$(IFS=', '; echo "${task_ids[*]}")"
-    echo ""
-    echo -e "  ${DIM}Prompt (first 3 lines):${NC}"
-    echo "$prompt" | head -3 | while IFS= read -r line; do
-        echo -e "    ${DIM}${line}${NC}"
-    done
-    echo ""
-
-    if ! confirm "Create and push session?"; then
-        rm -rf "$session_dir"
-        log_dim "Cancelled."
-        return 1
-    fi
-
-    # ── Step 7: Git commit + push ───────────────────────────────
-    git -C "$REPO_ROOT" add "${session_dir}/"
-    git -C "$REPO_ROOT" commit -m "enqueue: session ${session_id} (${workspace})" --quiet
-
-    log_info "Pushing session..."
-    if ! git -C "$REPO_ROOT" push --quiet 2>/dev/null; then
-        log_warn "Push failed, pulling and retrying..."
-        git -C "$REPO_ROOT" pull --rebase --quiet 2>/dev/null || true
-        if ! git -C "$REPO_ROOT" push --quiet 2>/dev/null; then
-            log_bad "Failed to push session."
-            return 1
-        fi
-    fi
-
-    log_good "Session ${session_id} enqueued."
-    ENQUEUED_SESSION_ID="$session_id"
-    echo ""
-    return 0
-}
-
-cmd_enqueue() {
-    _do_enqueue
-}
-
-cmd_spawn() {
-    if ! _do_enqueue; then
-        return 1
-    fi
-
-    local session_id="$ENQUEUED_SESSION_ID"
-
-    # Select and start the newly created session
-    config_set "selected_session" "$session_id"
-    log_info "Starting session ${session_id}..."
-    echo ""
-    cmd_start "$session_id"
-}
-
 # ─── Help / usage ─────────────────────────────────────────────────
 
 cmd_help() {
@@ -695,10 +685,7 @@ cmd_help() {
     table_row "version" "Display version and configuration"
     table_row "healthcheck" "Run system healthchecks"
     table_row "list [type]" "List sessions, tasks, or prs"
-    table_row "select [id]" "Select a session (interactive picker)"
-    table_row "start [id]" "Start a session (claim + run agent)"
-    table_row "enqueue" "Create a new session from a task or PR"
-    table_row "spawn" "Enqueue + select + start a session"
+    table_row "start [id]" "Start session, task, or PR (interactive if no id)"
     table_row "auto [int] [max]" "Auto-poll and process queued sessions"
     table_row "cli [name]" "Configure default CLI (claude/copilot/auto)"
     table_row "branch [name]" "Configure main branch"
@@ -719,22 +706,22 @@ cmd_help() {
 
     echo -e "  ${BRAND_BOLD}EXAMPLES${NC}"
     echo ""
-    echo -e "    ${DIM}# Quick start: pick and run a session${NC}"
+    echo -e "    ${DIM}# Interactive: choose session, task, or PR${NC}"
     echo -e "    patchboard start"
+    echo ""
+    echo -e "    ${DIM}# Start from a specific task or PR${NC}"
+    echo -e "    patchboard start T-0311"
+    echo -e "    patchboard start 42"
+    echo ""
+    echo -e "    ${DIM}# Resume an existing session${NC}"
+    echo -e "    patchboard start se-abc12345"
     echo ""
     echo -e "    ${DIM}# List tasks, PRs, or sessions${NC}"
     echo -e "    patchboard list tasks"
     echo -e "    patchboard list prs"
-    echo -e "    patchboard list sessions 10 queued"
-    echo ""
-    echo -e "    ${DIM}# Create and start a session from a task/PR${NC}"
-    echo -e "    patchboard spawn"
     echo ""
     echo -e "    ${DIM}# Auto-poll every 30s, max 5 sessions${NC}"
     echo -e "    patchboard auto 30 5"
-    echo ""
-    echo -e "    ${DIM}# Switch CLI to copilot${NC}"
-    echo -e "    patchboard cli copilot"
     echo ""
 }
 
@@ -769,8 +756,8 @@ shift || true
 # Apply per-command defaults if user didn't explicitly set --interactive/--non-interactive
 if [[ "${_NI_EXPLICIT:-}" != "true" ]]; then
     case "$command" in
-        start|run|spawn|sp)   AGENT_NON_INTERACTIVE=false ;;  # interactive by default
-        auto|poll)            AGENT_NON_INTERACTIVE=true ;;   # non-interactive by default
+        start|run)   AGENT_NON_INTERACTIVE=false ;;  # interactive by default
+        auto|poll)   AGENT_NON_INTERACTIVE=true ;;   # non-interactive by default
     esac
 fi
 
@@ -778,10 +765,7 @@ case "$command" in
     version|v)        cmd_version "$@" ;;
     healthcheck|hc)   cmd_healthcheck "$@" ;;
     list|ls)          cmd_list "$@" ;;
-    select|sel)       cmd_select "$@" ;;
     start|run)        cmd_start "$@" ;;
-    enqueue|eq)       cmd_enqueue "$@" ;;
-    spawn|sp)         cmd_spawn "$@" ;;
     auto|poll)        cmd_auto "$@" ;;
     cli)              cmd_cli "$@" ;;
     branch|br)        cmd_branch "$@" ;;
