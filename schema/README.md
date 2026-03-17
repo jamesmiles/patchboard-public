@@ -117,9 +117,7 @@ Run validation with: `.patchboard/tooling/patchboard.py validate`
 CLI tools and bot scripts are installed separately into `.patchboard/tooling/` via the management plane's "Install Tooling" action. The tooling includes:
 
 - `patchboard.py` — CLI for validation, indexing, and task search
-- `agent_bot.sh` — Self-hosted agent session orchestrator
-- `merge_bot.sh` — PR rescue bot
-- `ralph_bot.sh` — Interactive task implementer bot
+- `patchboard.bash` — Unified CLI for agent orchestration, session management, and task/PR listing
 
 ## Getting Started
 

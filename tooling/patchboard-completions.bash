@@ -15,9 +15,9 @@ _patchboard_completions() {
 
     # First argument = command
     if [[ $COMP_CWORD -eq 1 ]]; then
-        local commands="version healthcheck list select start auto cli branch status help"
+        local commands="version healthcheck list select start enqueue spawn auto cli branch status help"
         # Include short aliases
-        commands+=" v hc ls sel run poll br st"
+        commands+=" v hc ls sel run eq sp poll br st"
         COMPREPLY=( $(compgen -W "$commands" -- "$cur") )
         return 0
     fi
@@ -65,11 +65,28 @@ _patchboard_completions() {
 
         list|ls)
             if [[ "$prev" == "list" || "$prev" == "ls" ]]; then
-                # First arg = limit (number) or status
+                # First arg = subcommand or legacy limit/status
+                COMPREPLY=( $(compgen -W "sessions tasks prs 10 20 50 queued active failed completed stopped" -- "$cur") )
+            elif [[ "$prev" == "sessions" || "$prev" == "s" ]]; then
                 COMPREPLY=( $(compgen -W "10 20 50 queued active failed completed stopped" -- "$cur") )
+            elif [[ "$prev" == "tasks" || "$prev" == "t" ]]; then
+                COMPREPLY=( $(compgen -W "10 20 50 todo ready in_progress blocked review done" -- "$cur") )
+            elif [[ "$prev" == "prs" || "$prev" == "pr" || "$prev" == "pulls" ]]; then
+                COMPREPLY=( $(compgen -W "10 20 50 open closed merged all" -- "$cur") )
             elif [[ "$prev" =~ ^[0-9]+$ ]]; then
-                # Second arg = status filter
-                COMPREPLY=( $(compgen -W "queued active failed completed stopped" -- "$cur") )
+                # Second arg after limit = status/state filter
+                local subcmd="${COMP_WORDS[2]}"
+                case "$subcmd" in
+                    tasks|t)
+                        COMPREPLY=( $(compgen -W "todo ready in_progress blocked review done" -- "$cur") )
+                        ;;
+                    prs|pr|pulls)
+                        COMPREPLY=( $(compgen -W "open closed merged all" -- "$cur") )
+                        ;;
+                    *)
+                        COMPREPLY=( $(compgen -W "queued active failed completed stopped" -- "$cur") )
+                        ;;
+                esac
             fi
             ;;
 

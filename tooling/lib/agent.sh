@@ -2,7 +2,7 @@
 #
 # agent.sh - Agent invocation, claiming, and post-run logic
 #
-# Extracted from agent_bot.sh for composability.
+# Agent invocation, claiming, and post-run logic.
 #
 # Requires: REPO_ROOT, SESSION_DIR, SCRIPT_DIR set by caller
 # Requires: lib/colors.sh, lib/config.sh, lib/sessions.sh sourced
