@@ -120,7 +120,7 @@ install_system_deps() {
 }
 
 install_python_deps() {
-    local venv_dir="${REPO_ROOT}/.venv"
+    local venv_dir="${SCRIPT_DIR}/.venv"
     local requirements="${SCRIPT_DIR}/requirements.txt"
 
     if [[ ! -f "$requirements" ]]; then
@@ -142,18 +142,6 @@ install_python_deps() {
         log_good "Venv created"
     else
         log_good "Venv already exists at ${venv_dir}"
-    fi
-
-    # Ensure .venv is gitignored in the user's repo
-    local gitignore="${REPO_ROOT}/.gitignore"
-    if [[ -f "$gitignore" ]]; then
-        if ! grep -qx '.venv/' "$gitignore" 2>/dev/null; then
-            echo '.venv/' >> "$gitignore"
-            log_good "Added .venv/ to .gitignore"
-        fi
-    else
-        echo '.venv/' > "$gitignore"
-        log_good "Created .gitignore with .venv/"
     fi
 
     log_info "Installing Python dependencies..."

@@ -1,0 +1,2 @@
+# Runtime artifacts — do not commit
+.venv/

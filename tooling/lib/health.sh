@@ -12,8 +12,8 @@ healthcheck_schema() {
 
     if [[ -f "${SCRIPT_DIR}/patchboard.py" ]]; then
         local py=""
-        if [[ -x "${REPO_ROOT}/.venv/bin/python" ]]; then
-            py="${REPO_ROOT}/.venv/bin/python"
+        if [[ -x "${SCRIPT_DIR}/.venv/bin/python" ]]; then
+            py="${SCRIPT_DIR}/.venv/bin/python"
         elif [[ -x "${REPO_ROOT}/.patchboard-local/venv/bin/python" ]]; then
             py="${REPO_ROOT}/.patchboard-local/venv/bin/python"
         else
