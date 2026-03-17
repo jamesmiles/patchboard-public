@@ -142,7 +142,7 @@ discover_tasks() {
 # ─── Task table rendering ────────────────────────────────────────
 
 _setup_task_table() {
-    TABLE_WIDTHS=(9 14 5 78 16 30)
+    TABLE_WIDTHS=(9 14 5 50 16)
     TABLE_INDENT="  "
 }
 
@@ -172,22 +172,21 @@ print_task_table() {
     fi
 
     _setup_task_table
-    table_header "ID" "STATUS" "PRI" "TITLE" "OWNER" "LABELS"
+    table_header "ID" "STATUS" "PRI" "TITLE" "OWNER"
 
     # Single jq call: extract all rows as tab-separated lines
     echo "$tasks" | jq -r '.[] | [
         (.id // ""),
         (.status // ""),
         (.priority // ""),
-        ((.title // "")[:76]),
-        (.owner // "—"),
-        ((.labels // []) | join(", "))
-    ] | @tsv' | while IFS=$'\t' read -r _tid _tstatus _tpri _ttitle _towner _tlabels; do
+        ((.title // "")[:48]),
+        (.owner // "-")
+    ] | @tsv' | while IFS=$'\t' read -r _tid _tstatus _tpri _ttitle _towner; do
         local scolor
         scolor=$(_task_status_color "$_tstatus")
 
         local line=""
-        local cols=("$_tid" "$_tstatus" "$_tpri" "$_ttitle" "$_towner" "$_tlabels")
+        local cols=("$_tid" "$_tstatus" "$_tpri" "$_ttitle" "$_towner")
         for j in "${!cols[@]}"; do
             local w="${TABLE_WIDTHS[$j]:-20}"
             local cell
@@ -238,7 +237,7 @@ select_task() {
         echo ""
         _setup_task_table
         TABLE_INDENT="        "
-        table_header "ID" "STATUS" "PRI" "TITLE" "OWNER" "LABELS"
+        table_header "ID" "STATUS" "PRI" "TITLE" "OWNER"
 
         # Pre-extract all rows + IDs in a single jq call
         local -a task_ids=()
@@ -249,16 +248,15 @@ select_task() {
             (.id // ""),
             (.status // ""),
             (.priority // ""),
-            ((.title // "")[:76]),
-            (.owner // "—"),
-            ((.labels // []) | join(", "))
-        ] | @tsv' | while IFS=$'\t' read -r _tid _tstatus _tpri _ttitle _towner _tlabels; do
+            ((.title // "")[:48]),
+            (.owner // "-")
+        ] | @tsv' | while IFS=$'\t' read -r _tid _tstatus _tpri _ttitle _towner; do
             num=$(( num + 1 ))
             local scolor
             scolor=$(_task_status_color "$_tstatus")
 
             local line=""
-            local cols=("$_tid" "$_tstatus" "$_tpri" "$_ttitle" "$_towner" "$_tlabels")
+            local cols=("$_tid" "$_tstatus" "$_tpri" "$_ttitle" "$_towner")
             for j in "${!cols[@]}"; do
                 local w="${TABLE_WIDTHS[$j]:-20}"
                 local cell
