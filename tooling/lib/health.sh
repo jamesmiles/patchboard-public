@@ -11,8 +11,16 @@ healthcheck_schema() {
     log_info "Schema validation..."
 
     if [[ -f "${SCRIPT_DIR}/patchboard.py" ]]; then
+        local py=""
+        if [[ -x "${REPO_ROOT}/.venv/bin/python" ]]; then
+            py="${REPO_ROOT}/.venv/bin/python"
+        elif [[ -x "${REPO_ROOT}/.patchboard-local/venv/bin/python" ]]; then
+            py="${REPO_ROOT}/.patchboard-local/venv/bin/python"
+        else
+            py="python3"
+        fi
         local output
-        output=$("${REPO_ROOT}/.venv/bin/python" "${SCRIPT_DIR}/patchboard.py" validate --verbose 2>&1) && {
+        output=$("$py" "${SCRIPT_DIR}/patchboard.py" validate --verbose 2>&1) && {
             log_good "Schema validation passed"
             return 0
         } || {

@@ -117,8 +117,17 @@ def now_utc() -> datetime:
 
 
 def repo_root_from_here() -> Path:
-    # .patchboard/tooling/patchboard.py -> parents: [tooling, .patchboard, repo]
-    return Path(__file__).resolve().parents[2]
+    # Prefer the git repo of the caller's working directory;
+    # fall back to the script's location for backward compat.
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, check=True,
+        )
+        return Path(result.stdout.strip())
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # .patchboard/tooling/patchboard.py -> parents: [tooling, .patchboard, repo]
+        return Path(__file__).resolve().parents[2]
 
 
 def read_text(p: Path) -> str:

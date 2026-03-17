@@ -435,6 +435,7 @@ cmd_status() {
     local cli branch
     cli=$(config_get "cli")
     branch=$(config_get "branch")
+    print_kv "Repo root" "$REPO_ROOT"
     print_kv "CLI" "${cli:-claude}"
     print_kv "Branch" "${branch:-main}"
     print_kv "Version" "$PATCHBOARD_VERSION"
