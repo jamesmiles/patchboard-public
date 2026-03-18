@@ -689,17 +689,13 @@ cmd_upgrade() {
 
     # Fetch the remote VERSION to compare
     log_info "Checking for updates..."
-    if ! git clone --depth 1 --filter=blob:none --sparse "$PATCHBOARD_PUBLIC_REPO" "$tmp_dir/repo" 2>/dev/null; then
+    if ! git clone --depth 1 "$PATCHBOARD_PUBLIC_REPO" "$tmp_dir/repo" 2>/dev/null; then
         log_bad "Failed to fetch from ${PATCHBOARD_PUBLIC_REPO}"
         return 1
     fi
 
-    # Sparse-checkout just the tooling folder
-    git -C "$tmp_dir/repo" sparse-checkout set tooling 2>/dev/null
-    git -C "$tmp_dir/repo" checkout 2>/dev/null
-
     local remote_version
-    remote_version="$(cat "$tmp_dir/repo/tooling/VERSION" 2>/dev/null || echo "unknown")"
+    remote_version="$(cat "$tmp_dir/repo/VERSION" 2>/dev/null || echo "unknown")"
 
     print_kv "Installed" "v${local_version}"
     print_kv "Latest" "v${remote_version}"
@@ -720,7 +716,7 @@ cmd_upgrade() {
     if [[ "$force" != "true" ]]; then
         log_warn "Upgrading ${YELLOW}v${local_version}${NC} → ${YELLOW}v${remote_version}${NC}"
         echo ""
-        echo -e "  ${DIM}This will overwrite any local modifications to .patchboard/tooling/*${NC}"
+        echo -e "  ${DIM}This will overwrite .patchboard/ tooling, schemas, and state${NC}"
         echo ""
         if ! confirm "Proceed with upgrade?"; then
             log_dim "Cancelled."
@@ -729,14 +725,35 @@ cmd_upgrade() {
         echo ""
     fi
 
-    # Copy new tooling into place
+    local patchboard_dir="${REPO_ROOT}/.patchboard"
     log_info "Installing v${remote_version}..."
+
+    # Copy root files (VERSION)
+    cp "$tmp_dir/repo/VERSION" "$patchboard_dir/VERSION"
+
+    # Copy schema directories (additive merge)
+    local schema_dir
+    for schema_dir in planning schemas state tasks; do
+        if [[ -d "$tmp_dir/repo/$schema_dir" ]]; then
+            rsync -a "$tmp_dir/repo/$schema_dir/" "$patchboard_dir/$schema_dir/"
+        fi
+    done
+
+    # Replace tooling directory (clean wipe then copy)
     mkdir -p "$tooling_dest"
     rsync -a --delete "$tmp_dir/repo/tooling/" "$tooling_dest/"
     chmod +x "$tooling_dest/patchboard.bash"
     chmod +x "$tooling_dest/install.sh"
 
-    log_good "Tooling updated to v${remote_version}"
+    # Install GitHub Actions workflows if templates exist
+    if [[ -d "$tmp_dir/repo/tooling/workflows" ]]; then
+        local gh_workflows_dir="${REPO_ROOT}/.github/workflows"
+        mkdir -p "$gh_workflows_dir"
+        rsync -a "$tmp_dir/repo/tooling/workflows/" "$gh_workflows_dir/"
+        log_good "GitHub Actions workflows updated"
+    fi
+
+    log_good "Upgraded to v${remote_version}"
 
     # Re-run install to update symlinks, deps, etc.
     log_info "Running install..."
