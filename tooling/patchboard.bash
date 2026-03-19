@@ -739,9 +739,22 @@ cmd_upgrade() {
         fi
     done
 
+    # Preserve local config before replacing tooling directory
+    local config_backup=""
+    local config_file="${tooling_dest}/state/config.json"
+    if [[ -f "$config_file" ]]; then
+        config_backup=$(cat "$config_file")
+    fi
+
     # Replace tooling directory (clean wipe then copy)
     mkdir -p "$tooling_dest"
     rsync -a --delete "$tmp_dir/repo/tooling/" "$tooling_dest/"
+
+    # Restore local config
+    if [[ -n "$config_backup" ]]; then
+        mkdir -p "${tooling_dest}/state"
+        echo "$config_backup" > "$config_file"
+    fi
     chmod +x "$tooling_dest/patchboard.bash"
     chmod +x "$tooling_dest/install.sh"
 

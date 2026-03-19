@@ -214,14 +214,27 @@ prompt_choice() {
         echo -e "    ${CYAN}${num})${NC} ${options[$i]}"
     done
     echo ""
-    read -p "    Choice [1]: " choice
-    choice="${choice:-1}"
 
-    if [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 && "$choice" -le "${#options[@]}" ]]; then
-        REPLY="${options[$(( choice - 1 ))]}"
-    else
-        REPLY="${options[0]}"
-    fi
+    while true; do
+        read -p "    Choice [1]: " choice
+        choice="${choice:-1}"
+
+        # Match by number
+        if [[ "$choice" =~ ^[0-9]+$ ]] && [[ "$choice" -ge 1 && "$choice" -le "${#options[@]}" ]]; then
+            REPLY="${options[$(( choice - 1 ))]}"
+            return
+        fi
+
+        # Match by option text (case-insensitive)
+        for i in "${!options[@]}"; do
+            if [[ "${options[$i],,}" == "${choice,,}" ]]; then
+                REPLY="${options[$i]}"
+                return
+            fi
+        done
+
+        echo -e "    ${BAD}Invalid choice '${choice}'. Enter a number (1-${#options[@]}) or option name.${NC}"
+    done
 }
 
 # Inline confirmation

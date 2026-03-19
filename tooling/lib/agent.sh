@@ -331,7 +331,7 @@ post_run_verify() {
 
     log_dim "Current branch: ${current_branch}"
 
-    if [[ "$current_branch" == "$main_branch" || "$current_branch" == "master" ]]; then
+    if [[ "$current_branch" == "$main_branch" ]]; then
         local head_msg dirty_files
         head_msg=$(git -C "$REPO_ROOT" log -1 --format="%s" 2>/dev/null || echo "")
         dirty_files=$(git -C "$REPO_ROOT" status --porcelain 2>/dev/null \
@@ -342,7 +342,7 @@ post_run_verify() {
             if attempt_recovery "incomplete_delivery" "$current_branch"; then
                 local post_branch
                 post_branch=$(git -C "$REPO_ROOT" branch --show-current 2>/dev/null || echo "$main_branch")
-                if [[ "$post_branch" != "$main_branch" && "$post_branch" != "master" ]]; then
+                if [[ "$post_branch" != "$main_branch" ]]; then
                     log_good "Recovery created branch '${post_branch}'"
                     current_branch="$post_branch"
                 else
