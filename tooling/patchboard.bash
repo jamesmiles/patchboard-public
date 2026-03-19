@@ -34,7 +34,7 @@ _resolve_script() {
 SCRIPT_DIR="$(_resolve_script)"
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || dirname "$(dirname "$SCRIPT_DIR")")"
 SESSION_DIR="${REPO_ROOT}/.patchboard/state/cloud-agents"
-PATCHBOARD_VERSION="$(cat "${REPO_ROOT}/VERSION" 2>/dev/null || cat "${SCRIPT_DIR}/VERSION" 2>/dev/null || echo "unknown")"
+PATCHBOARD_VERSION="$(cat "${REPO_ROOT}/.patchboard/VERSION" 2>/dev/null || echo "unknown")"
 PATCHBOARD_BRANCH_OVERRIDE=""
 
 # ─── Source libraries ──────────────────────────────────────────────
@@ -507,7 +507,7 @@ cmd_auto() {
 
         # Check for version update
         local current_version
-        current_version="$(cat "${REPO_ROOT}/VERSION" 2>/dev/null || cat "${SCRIPT_DIR}/VERSION" 2>/dev/null || echo "unknown")"
+        current_version="$(cat "${REPO_ROOT}/.patchboard/VERSION" 2>/dev/null || echo "unknown")"
         if [[ "$current_version" != "$PATCHBOARD_VERSION" && "$current_version" != "unknown" ]]; then
             log_warn "Version update: v${PATCHBOARD_VERSION} → v${current_version}"
             log_info "Restarting..."
@@ -734,7 +734,7 @@ cmd_upgrade() {
     local patchboard_dir="${REPO_ROOT}/.patchboard"
     log_info "Installing v${remote_version}..."
 
-    # Copy root files (VERSION)
+    # Copy VERSION into .patchboard/ where runtime looks for it
     cp "$tmp_dir/repo/VERSION" "$patchboard_dir/VERSION"
 
     # Copy schema directories (additive merge)
