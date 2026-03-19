@@ -25,7 +25,7 @@ generate_uuid() {
 
 ensure_on_main() {
     local main_branch
-    main_branch=$(config_get "branch")
+    main_branch="${PATCHBOARD_BRANCH_OVERRIDE:-$(config_get "branch")}"
     main_branch="${main_branch:-main}"
 
     local current
@@ -326,7 +326,7 @@ post_run_verify() {
 
     local current_branch main_branch
     current_branch=$(git -C "$REPO_ROOT" branch --show-current 2>/dev/null || echo "main")
-    main_branch=$(config_get "branch")
+    main_branch="${PATCHBOARD_BRANCH_OVERRIDE:-$(config_get "branch")}"
     main_branch="${main_branch:-main}"
 
     log_dim "Current branch: ${current_branch}"
@@ -455,7 +455,7 @@ create_diagnostic_pr() {
     update_session_status "$session_id" "$exit_code" "$error_detail"
 
     local main_branch
-    main_branch=$(config_get "branch")
+    main_branch="${PATCHBOARD_BRANCH_OVERRIDE:-$(config_get "branch")}"
     main_branch="${main_branch:-main}"
 
     ensure_on_main

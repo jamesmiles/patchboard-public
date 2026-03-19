@@ -35,6 +35,7 @@ SCRIPT_DIR="$(_resolve_script)"
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || dirname "$(dirname "$SCRIPT_DIR")")"
 SESSION_DIR="${REPO_ROOT}/.patchboard/state/cloud-agents"
 PATCHBOARD_VERSION="$(cat "${REPO_ROOT}/VERSION" 2>/dev/null || cat "${SCRIPT_DIR}/VERSION" 2>/dev/null || echo "unknown")"
+PATCHBOARD_BRANCH_OVERRIDE=""
 
 # ─── Source libraries ──────────────────────────────────────────────
 source "${SCRIPT_DIR}/lib/colors.sh"
@@ -467,9 +468,13 @@ cmd_auto() {
     local cli branch
     cli=$(config_get "cli")
     branch=$(config_get "branch")
+    branch="${branch:-main}"
+
+    # Cache branch for the duration of auto mode so it survives config deletion
+    PATCHBOARD_BRANCH_OVERRIDE="$branch"
 
     print_kv "CLI" "${cli:-claude}"
-    print_kv "Branch" "${branch:-main}"
+    print_kv "Branch" "$branch"
     print_kv "Poll interval" "${poll_interval}s"
     print_kv "Max sessions" "${max_sessions} (0=unlimited)"
     print_kv "Timeout" "${AGENT_TIMEOUT}s"
@@ -481,6 +486,7 @@ cmd_auto() {
     echo ""
 
     if ! confirm "Start auto-polling?"; then
+        PATCHBOARD_BRANCH_OVERRIDE=""
         log_dim "Cancelled."
         return 0
     fi
