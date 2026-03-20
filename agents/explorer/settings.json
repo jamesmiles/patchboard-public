@@ -1,0 +1,30 @@
+{
+  "displayName": "Explorer",
+  "icon": "compass",
+  "order": 9,
+  "default_model": "opus",
+  "context": {
+    "document_libraries": true,
+    "boards": false,
+    "backlog_items": {
+      "enabled": false,
+      "statuses": []
+    },
+    "pull_requests": false
+  },
+  "purpose": [
+    "Create/modify project documentation"
+  ],
+  "triggers": [
+    {
+      "type": "schedule",
+      "schedule": {
+        "schedule_type": "days_of_week",
+        "time": "09:00",
+        "days": [
+          "monday"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "displayName": "Tester",
+  "icon": "list-checks",
+  "order": 5,
+  "default_model": "opus",
+  "context": {
+    "document_libraries": false,
+    "boards": false,
+    "backlog_items": {
+      "enabled": true,
+      "statuses": [
+        "in_progress",
+        "review",
+        "done"
+      ]
+    },
+    "pull_requests": true
+  },
+  "purpose": [
+    "Create/modify backlog items"
+  ],
+  "triggers": [
+    {
+      "type": "impl_pr_submitted"
+    }
+  ]
+}

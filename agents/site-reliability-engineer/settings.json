@@ -1,0 +1,22 @@
+{
+  "displayName": "Site Reliability Engineer",
+  "icon": "hammer",
+  "order": 11,
+  "default_model": "opus",
+  "context": {
+    "document_libraries": true,
+    "boards": false,
+    "backlog_items": {
+      "enabled": false,
+      "statuses": []
+    },
+    "pull_requests": true
+  },
+  "purpose": [
+    "Diagnose environment issues",
+    "Create/modify code",
+    "Create/modify infrastructure",
+    "Spawn other agents"
+  ],
+  "triggers": []
+}

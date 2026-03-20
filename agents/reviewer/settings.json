@@ -1,0 +1,20 @@
+{
+  "displayName": "Reviewer",
+  "icon": "search",
+  "order": 6,
+  "context": {
+    "document_libraries": false,
+    "boards": false,
+    "backlog_items": {
+      "enabled": true,
+      "statuses": [
+        "review"
+      ]
+    },
+    "pull_requests": true
+  },
+  "purpose": [
+    "Create/modify backlog items"
+  ],
+  "triggers": []
+}

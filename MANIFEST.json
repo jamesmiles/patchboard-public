@@ -1,0 +1,466 @@
+{
+  "version": "2.1.0",
+  "generated_at": "2026-03-20T05:28:36Z",
+  "files": {
+    "agents/architect/index.md": {
+      "hash": "sha256:73e6434d1b3e8800e4c0429e2f6bf8fcb198bb94bb5965fcfe24aada030fdeb7",
+      "install": "seed"
+    },
+    "agents/architect/prompts/create-architecture-doc.md": {
+      "hash": "sha256:91e859fbb1296a2e47bb72758f179e56213f841524301224456d501f24b7a914",
+      "install": "seed"
+    },
+    "agents/architect/settings.json": {
+      "hash": "sha256:c8c7d149da42558afa840cd32e459ec136bca4483996216d4a899dc0dfb34f51",
+      "install": "seed"
+    },
+    "agents/documenter/index.md": {
+      "hash": "sha256:076878096a69ba6f12edef74b00da9a44f62827193338d173910c3c035afeda4",
+      "install": "seed"
+    },
+    "agents/documenter/prompts/update-pr-documentation.md": {
+      "hash": "sha256:195959f447d8400068d52fb7bb7b7d06cc3986edb19d81ca6176fa5c956b4e57",
+      "install": "seed"
+    },
+    "agents/documenter/settings.json": {
+      "hash": "sha256:a41f6eb454346e8e2dc3148555bec40f36f6dd1f71c1fd8286311c9022f618a9",
+      "install": "seed"
+    },
+    "agents/engineer/index.md": {
+      "hash": "sha256:e89d0fbee39f3854dafe215714b2afbf3ecd6c71a70f446f90ed9609e882c5ee",
+      "install": "seed"
+    },
+    "agents/engineer/prompts/claim-implement-task-or-epic.md": {
+      "hash": "sha256:6e5bd86aacd71e4d6bb65f530d800121c5dd2a66b7c298adb40cdf7ffeda6a9c",
+      "install": "seed"
+    },
+    "agents/engineer/settings.json": {
+      "hash": "sha256:431b3b2d59864e41fe7a1d77b236e40eec097a45ad9628fc02084ae31e986ef4",
+      "install": "seed"
+    },
+    "agents/engineering-manager/index.md": {
+      "hash": "sha256:81c4aebbc7a005dce7a34b84b2a93b0b8880d0e647fdd5f00e5ee2cb01a00b01",
+      "install": "seed"
+    },
+    "agents/engineering-manager/prompts/oversee-task-implementation.md": {
+      "hash": "sha256:7c4345bb0e19403edc85b25d5f2dd6855ea4ff97a3585293d3bcaabb8eb04380",
+      "install": "seed"
+    },
+    "agents/engineering-manager/settings.json": {
+      "hash": "sha256:8f6c9bf7e23ecf897a4133c83546e8358165c5f695114de5bd6aa52bffd290a4",
+      "install": "seed"
+    },
+    "agents/explorer/index.md": {
+      "hash": "sha256:748774b0e48a978289d238deb254539629b9ab7c62f1b097deceaf213e17039a",
+      "install": "seed"
+    },
+    "agents/explorer/prompts/discover-new-features.md": {
+      "hash": "sha256:d0c7b9ed8ed863c115e01160307511da3febee474c289e3446cf992714360e7d",
+      "install": "seed"
+    },
+    "agents/explorer/prompts/explore-localserver-gui.md": {
+      "hash": "sha256:42cb35e0816e11a66b13b5a107019318d3e196749afb0b0c13db8bbff6a54ee7",
+      "install": "seed"
+    },
+    "agents/explorer/prompts/explore-staging-gui.md": {
+      "hash": "sha256:ed44993808aa543474ac2070765b11c3c07290b196814e26c467ca51a7f38485",
+      "install": "seed"
+    },
+    "agents/explorer/settings.json": {
+      "hash": "sha256:1e8e3f3a278edcbdc4dd287ceb1a0c95576116a540b8322c695bde8c6b2572ec",
+      "install": "seed"
+    },
+    "agents/merge-bot/index.md": {
+      "hash": "sha256:0473c7016216d871f61be259b59919ca5d0f3817d86c86922f79ab3149c77954",
+      "install": "seed"
+    },
+    "agents/merge-bot/prompts/fix-broken-tests.md": {
+      "hash": "sha256:3eeb7a2507c911b247e2fd107cdf61c191ee4e2a84c086b66f0904186a887613",
+      "install": "seed"
+    },
+    "agents/merge-bot/prompts/rescue-pr.md": {
+      "hash": "sha256:dc4fa47aa22fd696895e6b2208dfdb113cec58f0c4887f35552fe2dc619dd42e",
+      "install": "seed"
+    },
+    "agents/merge-bot/prompts/resolve-merge-conflicts.md": {
+      "hash": "sha256:dcc3ad5e88b74c4ff7ec0af6d99f2deca98ed008f28b80dd8bddc32be10c5950",
+      "install": "seed"
+    },
+    "agents/merge-bot/settings.json": {
+      "hash": "sha256:8f5867b476d086f281b5412ab78bfd3548af83de5be130a982caebf6891f28e1",
+      "install": "seed"
+    },
+    "agents/planner/index.md": {
+      "hash": "sha256:632a9f1833cb0fa243d4f02a81ec26f504716a0ff0e7b6015edcc9e39d00d96a",
+      "install": "seed"
+    },
+    "agents/planner/prompts/plan-task-from-documents.md": {
+      "hash": "sha256:3907b8498f4cc5f608e2d3ccba22ba40da019de79c2a7d326198baee63686221",
+      "install": "seed"
+    },
+    "agents/planner/prompts/plan-task.md": {
+      "hash": "sha256:4afc1483a6ba1ec6d4b4830f1b5145a227eb7d766d5f4f036062c3d9ff8c8ed1",
+      "install": "seed"
+    },
+    "agents/planner/settings.json": {
+      "hash": "sha256:a6172e26c31f3da7d9a49a09e94e51df6c0bb40a605cc2c59e672ab5582212c0",
+      "install": "seed"
+    },
+    "agents/qc-manager/index.md": {
+      "hash": "sha256:7b823be52af6d1a1c2090714c51bc4a1c53e567bd790d233c798d8309f686d62",
+      "install": "seed"
+    },
+    "agents/qc-manager/prompts/run-full-regression-test.md": {
+      "hash": "sha256:954033084f7c6dc1dd2b38e97681f65e957a66c660243e7044c20f1f7aac9a51",
+      "install": "seed"
+    },
+    "agents/qc-manager/prompts/run-targeted-regression-test.md": {
+      "hash": "sha256:ac7468fa3f484cea2937a9ca5466df60978e83d44362ac448e04d9f28ad61de4",
+      "install": "seed"
+    },
+    "agents/qc-manager/settings.json": {
+      "hash": "sha256:ba0103cbd91d9377c00d8d331dbd4465240b603fccf36235d1c415f8479f1e8e",
+      "install": "seed"
+    },
+    "agents/regression-analyst/index.md": {
+      "hash": "sha256:e5c31158fd5e62bdf5f44c8d1407f0bb54bb7f56792c8697b802574fc69e9219",
+      "install": "seed"
+    },
+    "agents/regression-analyst/prompts/analyse-localserver-gui-regression.md": {
+      "hash": "sha256:fef7bd712b2189ab586ff49924263096e9162f5e93b0d34ccfef2e386047914b",
+      "install": "seed"
+    },
+    "agents/regression-analyst/prompts/analyse-staging-gui-regression.md": {
+      "hash": "sha256:a2c529e84ab00cd93c63bb48093bea541ca6e0f76c6a95275c81354625d4ffa5",
+      "install": "seed"
+    },
+    "agents/regression-analyst/settings.json": {
+      "hash": "sha256:86f996def650c3acf7ae7f17c5a0dbd225246360527da52c266706e73991e77f",
+      "install": "seed"
+    },
+    "agents/reviewer/index.md": {
+      "hash": "sha256:ff47611680784d0d23f2689def5c643bcbb52c512c79fb8af30f4a053b89664a",
+      "install": "seed"
+    },
+    "agents/reviewer/prompts/review-implementation.md": {
+      "hash": "sha256:a96b8e666ff5986e0269529b0cefcb9c440ab63b3617cb51f59a42743dbea2e7",
+      "install": "seed"
+    },
+    "agents/reviewer/settings.json": {
+      "hash": "sha256:c2b32268ed12ef63f24d1a2e094f223891874886611bf223cc08f1f58d96ecec",
+      "install": "seed"
+    },
+    "agents/setup-agent/index.md": {
+      "hash": "sha256:dc78c8a4f3461c9f4765d83bab2913f567007f240331ba55a234798eb62127d7",
+      "install": "seed"
+    },
+    "agents/setup-agent/prompts/setup-brownfield-project.md": {
+      "hash": "sha256:0595a3dea6dd1eb80e4ec56da8ac5cf67e129bd306d320c1b1f462e3972402e3",
+      "install": "seed"
+    },
+    "agents/setup-agent/prompts/setup-greenfield-project.md": {
+      "hash": "sha256:34f8c2e9c119af8ba76eb26fc56f63de804d4dc680c1186fdd982c4728171759",
+      "install": "seed"
+    },
+    "agents/setup-agent/settings.json": {
+      "hash": "sha256:3a45a35619b992b029c58bb9b6d5884b72492b66eec7b2e98808010c572fa3e4",
+      "install": "seed"
+    },
+    "agents/site-reliability-engineer/index.md": {
+      "hash": "sha256:9ccc27723ba1e8236f241a26bdd6f8ecd8de109475e11d199cb4b509a7cbf44b",
+      "install": "seed"
+    },
+    "agents/site-reliability-engineer/prompts/diagnose-environment.md": {
+      "hash": "sha256:d1fea9c4bc0a59c47cd3e674d0826005ce04d15675c7cd4fd3617a29423b244f",
+      "install": "seed"
+    },
+    "agents/site-reliability-engineer/prompts/investigate-incident.md": {
+      "hash": "sha256:debb752d1a31f98c47c83aeeb2a5973088a46c652b2a1cdb8deb8e5f674e0cb6",
+      "install": "seed"
+    },
+    "agents/site-reliability-engineer/prompts/review-infrastructure.md": {
+      "hash": "sha256:8f218696b91ffa5267b00228069fd388bebd54705b89588f903ad878568bc527",
+      "install": "seed"
+    },
+    "agents/site-reliability-engineer/settings.json": {
+      "hash": "sha256:80af07d4b608088649129ca8ca21b117d68d2dd42816cf480c0920cd565662db",
+      "install": "seed"
+    },
+    "agents/tester/index.md": {
+      "hash": "sha256:aa4aa05328f1ef0b5a12be8f3e701a4866d0a96302b62310a759106bcb74068b",
+      "install": "seed"
+    },
+    "agents/tester/prompts/conduct-visual-testing.md": {
+      "hash": "sha256:d02702186b54ae5d5d80f2898bf840524ef5551fbc4430aa62d74c26667ce38e",
+      "install": "seed"
+    },
+    "agents/tester/prompts/regression-test-areas.md": {
+      "hash": "sha256:95f7950d46b1e054e793ad88603a6057521003d0889557de5f70592f120b9c81",
+      "install": "seed"
+    },
+    "agents/tester/prompts/verify-pr-for-manager.md": {
+      "hash": "sha256:3ae0db0a9ae347e4222752dbc91882fab47730251e45d6cf2bafcfe8510610c3",
+      "install": "seed"
+    },
+    "agents/tester/settings.json": {
+      "hash": "sha256:4029f5a0786ceebc97a07fa5d8ecf41cbfbec9eb207a08dcfafd4fb20ae8f3de",
+      "install": "seed"
+    },
+    "docs/faq/how-to-access-deployment-environments.md": {
+      "hash": "sha256:27863d0ccff289f8d1990593b3058ada946f2c81d0398fc088853ec0ea2cfb02",
+      "install": "seed"
+    },
+    "docs/faq/how-to-access-system-logs.md": {
+      "hash": "sha256:27863d0ccff289f8d1990593b3058ada946f2c81d0398fc088853ec0ea2cfb02",
+      "install": "seed"
+    },
+    "docs/faq/how-to-ask-humans-to-do-something.md": {
+      "hash": "sha256:e3816547dcd2c8be6d3718cc7402e5e5f969fd2238acb3563139c07749a496a8",
+      "install": "seed"
+    },
+    "docs/faq/how-to-attach-feedback-to-a-task.md": {
+      "hash": "sha256:941ae0f05efb9f9ff45856b6afa40ad4a6980809a0443ce290902b89fcb4475f",
+      "install": "seed"
+    },
+    "docs/faq/how-to-conduct-visual-testing.md": {
+      "hash": "sha256:27863d0ccff289f8d1990593b3058ada946f2c81d0398fc088853ec0ea2cfb02",
+      "install": "seed"
+    },
+    "docs/faq/how-to-login-to-an-environment.md": {
+      "hash": "sha256:27863d0ccff289f8d1990593b3058ada946f2c81d0398fc088853ec0ea2cfb02",
+      "install": "seed"
+    },
+    "docs/faq/how-to-setup-local-server-environment.md": {
+      "hash": "sha256:27863d0ccff289f8d1990593b3058ada946f2c81d0398fc088853ec0ea2cfb02",
+      "install": "seed"
+    },
+    "docs/faq/how-to-upload-screenshots-to-a-pr.md": {
+      "hash": "sha256:773c1ddcba7b47fcf91ec14fd861b211c06151203f83b9451676f58c9d87f0e9",
+      "install": "seed"
+    },
+    "docs/faq/how-to-verify-task-implementation.md": {
+      "hash": "sha256:27863d0ccff289f8d1990593b3058ada946f2c81d0398fc088853ec0ea2cfb02",
+      "install": "seed"
+    },
+    "docs/faq/index.md": {
+      "hash": "sha256:aa7ad0760a436411e8473f876667fc2d87253cd197831f588c518c8e0148f0c3",
+      "install": "seed"
+    },
+    "docs/faq/settings.json": {
+      "hash": "sha256:5180b98ab62457288b93ded2a69c77c98d985a8af97ef29bdaeec00d99d4a56e",
+      "install": "seed"
+    },
+    "docs/product/function-map.md": {
+      "hash": "sha256:dd520b8b94d7e4bbcb22f7b0a4f68ce40f0b722312c4f84f5dc90cf46363f8e9",
+      "install": "seed"
+    },
+    "docs/product/index.md": {
+      "hash": "sha256:5f6a0a9b803031fd08e86b040b338183c91e11a199979a9181ecfd04d4c28481",
+      "install": "seed"
+    },
+    "docs/product/settings.json": {
+      "hash": "sha256:54a2ca1042fa1d82c75f4b9e0354a9299ae3014807252e8fe2e3bb872e45c479",
+      "install": "seed"
+    },
+    "docs/product/vision.md": {
+      "hash": "sha256:27863d0ccff289f8d1990593b3058ada946f2c81d0398fc088853ec0ea2cfb02",
+      "install": "seed"
+    },
+    "docs/qa/index.md": {
+      "hash": "sha256:b857a4b98bd62436e11e839cd4b008c8b6eca5dcf2f94ca2e8960e18269a6066",
+      "install": "seed"
+    },
+    "docs/qa/settings.json": {
+      "hash": "sha256:02114de662aa863f0a52e93e609c9695316faf942f8acbe0eb779c6615e0cadd",
+      "install": "seed"
+    },
+    "docs/technical/architecture.md": {
+      "hash": "sha256:27863d0ccff289f8d1990593b3058ada946f2c81d0398fc088853ec0ea2cfb02",
+      "install": "seed"
+    },
+    "docs/technical/deployment-architecture.md": {
+      "hash": "sha256:27863d0ccff289f8d1990593b3058ada946f2c81d0398fc088853ec0ea2cfb02",
+      "install": "seed"
+    },
+    "docs/technical/index.md": {
+      "hash": "sha256:e72c29101043be5c2d069790c16886ae9bfca2e9d377ac008ebe05479ddf07b4",
+      "install": "seed"
+    },
+    "docs/technical/settings.json": {
+      "hash": "sha256:232568fc0246e53e07a3530f8552139c881e20fb729eed0d9954578ecf81c60b",
+      "install": "seed"
+    },
+    "planning/boards/kanban.yaml": {
+      "hash": "sha256:10d7996da5857c18b586058330961b411787302cb1d1d6a6e9cc7bd5939d7f49",
+      "install": "always"
+    },
+    "planning/roadmap.md": {
+      "hash": "sha256:5d3ff0e78061b3cfe9ef4bb48fb898bebfca288ce436bc43402a8f4c1466e38f",
+      "install": "seed"
+    },
+    "schemas/board.schema.json": {
+      "hash": "sha256:8210f4d5e32407611befce0013258bc9597cbeb73568b118897d0e732f9b1f3e",
+      "install": "always"
+    },
+    "schemas/task.schema.json": {
+      "hash": "sha256:9997f89322a821458ef9616b972292161b118a2ecce4bef35682f4764a3e1f3f",
+      "install": "always"
+    },
+    "state/cloud-agents/.gitkeep": {
+      "hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "install": "seed"
+    },
+    "tasks/_templates/epic.template.md": {
+      "hash": "sha256:7477ae2a005d6228d77230a5512c6870c8de09194adbbe92034e060c40e2358e",
+      "install": "seed"
+    },
+    "tasks/_templates/task.template.md": {
+      "hash": "sha256:ba001fdf8971aa9ba14d9ab68b40506173bb889832f4c03c599baf0f8cd2a86d",
+      "install": "seed"
+    },
+    "tasks/.archived/.gitkeep": {
+      "hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "install": "seed"
+    },
+    "tasks/E-0001/task.md": {
+      "hash": "sha256:2988229b7aaf3736b2e559529c545e301172d5091104c15e4e36e28fa6cd8440",
+      "install": "seed"
+    },
+    "tasks/T-0001/task.md": {
+      "hash": "sha256:6099133c04e08c5fdcc66935224026d7f93520068d9476d4d41801b4062aa08d",
+      "install": "seed"
+    },
+    "tasks/T-0002/task.md": {
+      "hash": "sha256:cd755ca6101f140be9546f5918e09eee561938b81c2eb9d786d21b6275187d0b",
+      "install": "seed"
+    },
+    "tasks/T-0003/task.md": {
+      "hash": "sha256:388d3686f475f97d1839ba9270976d5d0de93743fd74cdc3f494aed20111f14b",
+      "install": "seed"
+    },
+    "tasks/T-0004/task.md": {
+      "hash": "sha256:8ddde60d68612247576322fcc884b444620f1fa1bc69f24e509c6ade5f7232c2",
+      "install": "seed"
+    },
+    "tasks/T-0005/task.md": {
+      "hash": "sha256:401912145d6604c8a308cb34ada0998ed61a9fd87bc1dd95dd8a7fa087bb0e72",
+      "install": "seed"
+    },
+    "tasks/T-0006/task.md": {
+      "hash": "sha256:e6022105e47f1d29905fba2b3aef11212d35dcb2f372edc2aa736d81a5a95c84",
+      "install": "seed"
+    },
+    "tasks/T-0007/task.md": {
+      "hash": "sha256:17a46b002b9bd430b48ffdab8d9768f4ce52efd7576010055174ac363b1ad9e7",
+      "install": "seed"
+    },
+    "tasks/T-0008/task.md": {
+      "hash": "sha256:3248340f090c63f6ae607cd73930c16b42da3bfb69e33b4d077daafa91acc9e2",
+      "install": "seed"
+    },
+    "tasks/T-0009/task.md": {
+      "hash": "sha256:ebbae9637bad764f9121ddd96097b3c9190fd0114d356edce6236fa5ed7e730b",
+      "install": "seed"
+    },
+    "tooling/.gitignore": {
+      "hash": "sha256:21e6c365259b45cc81dc60c8c673bb99653eb2efbc2602248a7bf91bfe7c8c08",
+      "install": "always"
+    },
+    "tooling/agent-list.sh": {
+      "hash": "sha256:e2fb6160eae9f7e2c19e9bcd9c2b4db3773cca5615d3098b6f04a86ff9a9e385",
+      "install": "always"
+    },
+    "tooling/install.sh": {
+      "hash": "sha256:0b3c711354b86b9061629f6031fde609e28789eb0310c9a265314f8e12b60d99",
+      "install": "always"
+    },
+    "tooling/lib/agent.sh": {
+      "hash": "sha256:337bac95d678aa3727298d99845da3c4f27e6fcea15a8af2cb1df99ff435a159",
+      "install": "always"
+    },
+    "tooling/lib/colors.sh": {
+      "hash": "sha256:ec1ee818f3c42015e73614482dae6994fde4c2babcdeee0a6720986c849b0f42",
+      "install": "always"
+    },
+    "tooling/lib/config.sh": {
+      "hash": "sha256:d3eb1b6e604fc0df788727d7d8f54d558361616efa8e2b79f2479a221b6917d3",
+      "install": "always"
+    },
+    "tooling/lib/health.sh": {
+      "hash": "sha256:997286158bdd73bf92dac9313f6a830d469488d36969af93a6046eae2a787b23",
+      "install": "always"
+    },
+    "tooling/lib/prompts.sh": {
+      "hash": "sha256:c4eb814c2d9f815447e4858ce20c1147e1123584ca8184aa5695120e1b212588",
+      "install": "always"
+    },
+    "tooling/lib/prs.sh": {
+      "hash": "sha256:10ba16cac678bdb506713abe942e35d2abbf3618cbd347df5f614d23cf5b1b31",
+      "install": "always"
+    },
+    "tooling/lib/sessions.sh": {
+      "hash": "sha256:e41681da74a503584fc6cea96260906b437ec25551745aa36a49a53497df97f6",
+      "install": "always"
+    },
+    "tooling/lib/tasks.sh": {
+      "hash": "sha256:f82d16811479afd2d907a5c12c11bdf75c7e176360d6fa695ddbb06ce49c2228",
+      "install": "always"
+    },
+    "tooling/patchboard-completions.bash": {
+      "hash": "sha256:5ef2830d2d07feaf83399e82a887df5d57d30304a202ab3332c24a79056423f4",
+      "install": "always"
+    },
+    "tooling/patchboard.bash": {
+      "hash": "sha256:9ad8407e00e38d410edb755a0cf0b173c73fcfeeea1e516a8cf919e8c3fe1bfd",
+      "install": "always"
+    },
+    "tooling/patchboard.py": {
+      "hash": "sha256:5ba6f3904ecd6b827dd946dd9ecf8419f274ad5548ca92a2e64fabbaa364272b",
+      "install": "always"
+    },
+    "tooling/pr-screenshots.sh": {
+      "hash": "sha256:e9bc01e623aee06e08d33de0ad18e4f0a58820116dcd0ace0b9f6f8415d8a4ab",
+      "install": "always"
+    },
+    "tooling/README.md": {
+      "hash": "sha256:f7ad2155baf8b9cbd2c002eb43dda05193ffdab117b4aa4e4f740c2731ef362f",
+      "install": "always"
+    },
+    "tooling/requirements.txt": {
+      "hash": "sha256:811d821ec3a7d8efad7656cb604bc94eebc6018061b96a0fe5a788726f33bf2e",
+      "install": "always"
+    },
+    "tooling/schemas/board.schema.json": {
+      "hash": "sha256:2ef16da48a1f39c2f1aa076cdf9d734a482831d3ffc639fc55d4571805ccc270",
+      "install": "always"
+    },
+    "tooling/schemas/task.schema.json": {
+      "hash": "sha256:9997f89322a821458ef9616b972292161b118a2ecce4bef35682f4764a3e1f3f",
+      "install": "always"
+    },
+    "tooling/state/.gitignore": {
+      "hash": "sha256:2a168902665b1e490eb28f1efe1d71227ecbc0672a5c7b01e6afce6cb0bd163a",
+      "install": "always"
+    },
+    "tooling/validate-agent-sync.sh": {
+      "hash": "sha256:99e742864e772e377191bbe44e3f56403225fce1b6f2677ddacf0d605e54d5d0",
+      "install": "always"
+    },
+    "tooling/validate-pr.sh": {
+      "hash": "sha256:0eace715020a74533d5404bbeb2f290a22432d04acdb49c8ca25dca0db7cff2b",
+      "install": "always"
+    },
+    "tooling/validate.sh": {
+      "hash": "sha256:02e546c8f30b34d3219740d08a385e31ed62c3f0dca83d0c60c9080c2ce994ef",
+      "install": "always"
+    },
+    "tooling/workflows/patchboard-validate.yml": {
+      "hash": "sha256:bdc0815779656b94a2acbd66b13b6693c70899a3f7d0e9378241a77ab57387fa",
+      "install": "always"
+    },
+    "VERSION": {
+      "hash": "sha256:c89b87c262e9d5ffd20e73aac74a1772adcc9f5a21682cc33adcf5086e5fef5c",
+      "install": "always"
+    }
+  }
+}

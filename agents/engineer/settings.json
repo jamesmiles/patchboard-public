@@ -1,0 +1,21 @@
+{
+  "displayName": "Engineer",
+  "icon": "wrench",
+  "order": 4,
+  "default_model": "opus",
+  "context": {
+    "document_libraries": false,
+    "boards": false,
+    "backlog_items": {
+      "enabled": true,
+      "statuses": [
+        "all"
+      ]
+    },
+    "pull_requests": true
+  },
+  "purpose": [
+    "Create/modify code"
+  ],
+  "triggers": []
+}

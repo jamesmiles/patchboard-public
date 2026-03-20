@@ -1,0 +1,21 @@
+{
+  "displayName": "Setup Agent",
+  "icon": "settings",
+  "order": 0,
+  "context": {
+    "document_libraries": true,
+    "boards": false,
+    "backlog_items": {
+      "enabled": true,
+      "statuses": [
+        "all"
+      ]
+    },
+    "pull_requests": false
+  },
+  "purpose": [
+    "Write project documentation",
+    "Complete setup tasks"
+  ],
+  "triggers": []
+}

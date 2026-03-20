@@ -1,0 +1,22 @@
+{
+  "displayName": "Planner",
+  "icon": "compass",
+  "order": 3,
+  "default_model": "opus",
+  "context": {
+    "document_libraries": true,
+    "boards": true,
+    "backlog_items": {
+      "enabled": true,
+      "statuses": [
+        "all"
+      ]
+    },
+    "pull_requests": false
+  },
+  "purpose": [
+    "Create/modify project documentation",
+    "Create/modify backlog items"
+  ],
+  "triggers": []
+}

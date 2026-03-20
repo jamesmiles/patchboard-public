@@ -1,0 +1,29 @@
+{
+  "displayName": "Merge Bot",
+  "icon": "git-merge",
+  "order": 8,
+  "default_model": "opus",
+  "context": {
+    "document_libraries": false,
+    "boards": false,
+    "backlog_items": {
+      "enabled": false,
+      "statuses": []
+    },
+    "pull_requests": true
+  },
+  "purpose": [
+    "Create/modify code"
+  ],
+  "triggers": [
+    {
+      "type": "pr_blocked",
+      "pr_blocked": {
+        "duration_minutes": 60,
+        "reasons": [
+          "merge_conflict"
+        ]
+      }
+    }
+  ]
+}

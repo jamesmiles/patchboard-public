@@ -1,0 +1,19 @@
+{
+  "displayName": "Architect",
+  "icon": "layers",
+  "order": 2,
+  "default_model": "codex-max",
+  "context": {
+    "document_libraries": true,
+    "boards": false,
+    "backlog_items": {
+      "enabled": true,
+      "statuses": [
+        "all"
+      ]
+    },
+    "pull_requests": false
+  },
+  "purpose": [],
+  "triggers": []
+}
