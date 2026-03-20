@@ -1,6 +1,6 @@
 {
-  "version": "2.1.0",
-  "generated_at": "2026-03-20T05:28:36Z",
+  "version": "2.2.0",
+  "generated_at": "2026-03-20T09:35:16Z",
   "files": {
     "agents/architect/index.md": {
       "hash": "sha256:73e6434d1b3e8800e4c0429e2f6bf8fcb198bb94bb5965fcfe24aada030fdeb7",
@@ -324,43 +324,53 @@
     },
     "tasks/E-0001/task.md": {
       "hash": "sha256:2988229b7aaf3736b2e559529c545e301172d5091104c15e4e36e28fa6cd8440",
-      "install": "seed"
+      "install": "seed",
+      "group": "setup-epic"
     },
     "tasks/T-0001/task.md": {
       "hash": "sha256:6099133c04e08c5fdcc66935224026d7f93520068d9476d4d41801b4062aa08d",
-      "install": "seed"
+      "install": "seed",
+      "group": "setup-epic"
     },
     "tasks/T-0002/task.md": {
       "hash": "sha256:cd755ca6101f140be9546f5918e09eee561938b81c2eb9d786d21b6275187d0b",
-      "install": "seed"
+      "install": "seed",
+      "group": "setup-epic"
     },
     "tasks/T-0003/task.md": {
       "hash": "sha256:388d3686f475f97d1839ba9270976d5d0de93743fd74cdc3f494aed20111f14b",
-      "install": "seed"
+      "install": "seed",
+      "group": "setup-epic"
     },
     "tasks/T-0004/task.md": {
       "hash": "sha256:8ddde60d68612247576322fcc884b444620f1fa1bc69f24e509c6ade5f7232c2",
-      "install": "seed"
+      "install": "seed",
+      "group": "setup-epic"
     },
     "tasks/T-0005/task.md": {
       "hash": "sha256:401912145d6604c8a308cb34ada0998ed61a9fd87bc1dd95dd8a7fa087bb0e72",
-      "install": "seed"
+      "install": "seed",
+      "group": "setup-epic"
     },
     "tasks/T-0006/task.md": {
       "hash": "sha256:e6022105e47f1d29905fba2b3aef11212d35dcb2f372edc2aa736d81a5a95c84",
-      "install": "seed"
+      "install": "seed",
+      "group": "setup-epic"
     },
     "tasks/T-0007/task.md": {
       "hash": "sha256:17a46b002b9bd430b48ffdab8d9768f4ce52efd7576010055174ac363b1ad9e7",
-      "install": "seed"
+      "install": "seed",
+      "group": "setup-epic"
     },
     "tasks/T-0008/task.md": {
       "hash": "sha256:3248340f090c63f6ae607cd73930c16b42da3bfb69e33b4d077daafa91acc9e2",
-      "install": "seed"
+      "install": "seed",
+      "group": "setup-epic"
     },
     "tasks/T-0009/task.md": {
       "hash": "sha256:ebbae9637bad764f9121ddd96097b3c9190fd0114d356edce6236fa5ed7e730b",
-      "install": "seed"
+      "install": "seed",
+      "group": "setup-epic"
     },
     "tooling/.gitignore": {
       "hash": "sha256:21e6c365259b45cc81dc60c8c673bb99653eb2efbc2602248a7bf91bfe7c8c08",
@@ -459,7 +469,7 @@
       "install": "always"
     },
     "VERSION": {
-      "hash": "sha256:c89b87c262e9d5ffd20e73aac74a1772adcc9f5a21682cc33adcf5086e5fef5c",
+      "hash": "sha256:c4a2383a03bdb6739d16a0e24058e4b9c7da4e63d203e0be2f448868cc03c530",
       "install": "always"
     }
   }

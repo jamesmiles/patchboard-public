@@ -9,6 +9,9 @@
 #   seed    - only copy if the file doesn't exist (docs, agents, tasks — user-owned)
 #   skip    - never installed (repo metadata like LICENSE, README, .gitignore)
 #
+# Files can also have a "group" field. Grouped files are all-or-nothing:
+# if any file in the group already exists, the entire group is skipped.
+#
 # The manifest is the source of truth for the installer.
 #
 # Usage:
@@ -46,6 +49,15 @@ is_skip() {
     return 1
 }
 
+# Files that belong to a group (all-or-nothing install)
+get_group() {
+    local f="$1"
+    case "$f" in
+        tasks/E-0001/*|tasks/T-000[1-9]/*) echo "setup-epic" ;;
+        *) echo "" ;;
+    esac
+}
+
 cd "$REPO_ROOT"
 
 # Build JSON
@@ -68,19 +80,24 @@ cd "$REPO_ROOT"
         # Compute hash
         hash=$(shasum -a 256 "$filepath" | cut -d' ' -f1)
 
-        # Determine install mode
+        # Determine install mode and group
         if is_always "$filepath"; then
             mode="always"
         else
             mode="seed"
         fi
+        group=$(get_group "$filepath")
 
         if [ "$first" = true ]; then
             first=false
         else
             printf ',\n'
         fi
-        printf '    "%s": {\n      "hash": "sha256:%s",\n      "install": "%s"\n    }' "$filepath" "$hash" "$mode"
+        if [ -n "$group" ]; then
+            printf '    "%s": {\n      "hash": "sha256:%s",\n      "install": "%s",\n      "group": "%s"\n    }' "$filepath" "$hash" "$mode" "$group"
+        else
+            printf '    "%s": {\n      "hash": "sha256:%s",\n      "install": "%s"\n    }' "$filepath" "$hash" "$mode"
+        fi
     done
 
     printf '\n  }\n'
