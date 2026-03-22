@@ -192,7 +192,15 @@ select_session() {
             sessions=$(discover_recent 30)
         else
             sessions=$(discover_sessions "$filter")
-            sessions=$(echo "$sessions" | jq 'sort_by(.started_at)')
+            if [[ "$filter" == "queued" ]]; then
+                if ! echo "$sessions" | jq -e 'all(.[]; (.created_at // "") != "")' >/dev/null; then
+                    log_bad "Queued session missing required created_at timestamp."
+                    return 1
+                fi
+                sessions=$(echo "$sessions" | jq 'sort_by(.created_at)')
+            else
+                sessions=$(echo "$sessions" | jq 'sort_by(.started_at // .updated_at)')
+            fi
         fi
 
         local count

@@ -542,9 +542,15 @@ cmd_auto() {
             exec "${BASH_SOURCE[0]}" auto "$poll_interval" "$max_sessions"
         fi
 
-        # Find oldest queued session
+        # Find oldest queued session (FIFO by enqueue time)
         local session_id
-        session_id=$(discover_sessions "queued" | jq -r '.[0].session_id // empty')
+        local queued_sessions
+        queued_sessions=$(discover_sessions "queued")
+        if ! echo "$queued_sessions" | jq -e 'all(.[]; (.created_at // "") != "")' >/dev/null; then
+            log_bad "Queued session missing required created_at timestamp."
+            return 1
+        fi
+        session_id=$(echo "$queued_sessions" | jq -r 'sort_by(.created_at) | .[0].session_id // empty')
 
         if [[ -n "$session_id" ]]; then
             log_info "[${ts}] Found: ${session_id}"
