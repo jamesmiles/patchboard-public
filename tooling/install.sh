@@ -16,7 +16,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PATCHBOARD_SCRIPT="${SCRIPT_DIR}/patchboard.bash"
 COMPLETIONS_SCRIPT="${SCRIPT_DIR}/patchboard-completions.bash"
 REPO_ROOT="$(cd "${SCRIPT_DIR}" && git rev-parse --show-toplevel 2>/dev/null || dirname "$SCRIPT_DIR")"
-PATCHBOARD_VERSION="$(cat "${REPO_ROOT}/.patchboard/VERSION" 2>/dev/null || echo "unknown")"
+
+resolve_patchboard_version() {
+    local root="$1"
+    cat "${root}/.patchboard/VERSION" 2>/dev/null \
+        || cat "${root}/VERSION" 2>/dev/null \
+        || echo "unknown"
+}
+
+PATCHBOARD_VERSION="$(resolve_patchboard_version "$REPO_ROOT")"
 
 # Brand colors
 BRAND='\033[38;5;51m'

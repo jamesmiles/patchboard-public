@@ -31,10 +31,45 @@ _resolve_script() {
     done
     cd "$(dirname "$source")" && pwd
 }
+
+resolve_patchboard_version() {
+    local root="$1"
+    cat "${root}/.patchboard/VERSION" 2>/dev/null \
+        || cat "${root}/VERSION" 2>/dev/null \
+        || echo "unknown"
+}
+
 SCRIPT_DIR="$(_resolve_script)"
+SHELL_REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || dirname "$(dirname "$SCRIPT_DIR")")"
+SHELL_VERSION_DEFAULT="$(resolve_patchboard_version "$SHELL_REPO_ROOT")"
+PATCHBOARD_SHELL_SCRIPT="${PATCHBOARD_SHELL_SCRIPT:-${SCRIPT_DIR}/patchboard.bash}"
+PATCHBOARD_SHELL_TOOLING_DIR="${PATCHBOARD_SHELL_TOOLING_DIR:-$SCRIPT_DIR}"
+PATCHBOARD_SHELL_VERSION="${PATCHBOARD_SHELL_VERSION:-$SHELL_VERSION_DEFAULT}"
+
+# If patchboard is launched from inside another repo that has its own
+# .patchboard/tooling/patchboard.bash, re-exec into that repo-local entrypoint
+# so version reporting and behavior always come from the same codebase.
+CURRENT_REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+CURRENT_REPO_SCRIPT=""
+if [[ -n "$CURRENT_REPO_ROOT" ]]; then
+    CURRENT_REPO_SCRIPT="${CURRENT_REPO_ROOT}/.patchboard/tooling/patchboard.bash"
+fi
+
+if [[ -z "${PATCHBOARD_REEXEC_GUARD:-}" && -n "$CURRENT_REPO_SCRIPT" && -f "$CURRENT_REPO_SCRIPT" ]]; then
+    CURRENT_REPO_SCRIPT_DIR="$(cd "$(dirname "$CURRENT_REPO_SCRIPT")" && pwd)"
+    if [[ "$CURRENT_REPO_SCRIPT_DIR" != "$SCRIPT_DIR" ]]; then
+        exec env \
+            PATCHBOARD_REEXEC_GUARD=1 \
+            PATCHBOARD_SHELL_SCRIPT="${SCRIPT_DIR}/patchboard.bash" \
+            PATCHBOARD_SHELL_TOOLING_DIR="$SCRIPT_DIR" \
+            PATCHBOARD_SHELL_VERSION="$PATCHBOARD_SHELL_VERSION" \
+            bash "$CURRENT_REPO_SCRIPT" "$@"
+    fi
+fi
+
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || dirname "$(dirname "$SCRIPT_DIR")")"
 SESSION_DIR="${REPO_ROOT}/.patchboard/state/cloud-agents"
-PATCHBOARD_VERSION="$(cat "${REPO_ROOT}/.patchboard/VERSION" 2>/dev/null || echo "unknown")"
+PATCHBOARD_VERSION="$(resolve_patchboard_version "$REPO_ROOT")"
 PATCHBOARD_BRANCH_OVERRIDE=""
 
 # ─── Source libraries ──────────────────────────────────────────────
@@ -131,12 +166,48 @@ pull_latest_with_warning() {
     return 0
 }
 
+_version_major() {
+    local version="$1"
+    if [[ "$version" =~ ^([0-9]+)\.[0-9]+\.[0-9]+$ ]]; then
+        printf '%s\n' "${BASH_REMATCH[1]}"
+        return 0
+    fi
+    return 1
+}
+
+warn_if_shell_version_drift() {
+    local shell_version="$1"
+    local repo_version="$2"
+    local shell_major repo_major
+
+    shell_major=$(_version_major "$shell_version" 2>/dev/null || true)
+    repo_major=$(_version_major "$repo_version" 2>/dev/null || true)
+
+    if [[ -z "$shell_major" || -z "$repo_major" || "$shell_major" == "$repo_major" ]]; then
+        return 0
+    fi
+
+    echo ""
+    log_warn "Installed shell version v${shell_version} differs from repo version v${repo_version} by major version."
+    log_warn "Reinstall the shell from this repo to avoid compatibility issues:"
+    echo -e "    ${CYAN}${REPO_ROOT}/.patchboard/tooling/install.sh${NC}"
+
+    if [[ -t 0 && -t 1 && -f "${REPO_ROOT}/.patchboard/tooling/install.sh" ]]; then
+        echo ""
+        if confirm "Install shell version ${repo_version} from this repo now?"; then
+            bash "${REPO_ROOT}/.patchboard/tooling/install.sh"
+        fi
+    fi
+}
+
 # ─── Commands ──────────────────────────────────────────────────────
 
 cmd_version() {
     print_box_header "Patchboard  v${PATCHBOARD_VERSION}"
-    print_kv "Version" "$PATCHBOARD_VERSION"
+    print_kv "Repo version" "$PATCHBOARD_VERSION"
+    print_kv "Shell version" "$PATCHBOARD_SHELL_VERSION"
     print_kv "Tooling dir" "$SCRIPT_DIR"
+    print_kv "Shell dir" "$PATCHBOARD_SHELL_TOOLING_DIR"
     print_kv "Repo root" "$REPO_ROOT"
     print_kv "Session dir" "$SESSION_DIR"
 
@@ -150,6 +221,7 @@ cmd_version() {
     print_kv "CLI" "${cli:-claude}"
     print_kv "Branch" "$branch"
     warn_if_branch_set_is_misaligned "$branch"
+    warn_if_shell_version_drift "$PATCHBOARD_SHELL_VERSION" "$PATCHBOARD_VERSION"
     echo ""
 }
 
@@ -593,7 +665,7 @@ cmd_auto() {
 
         # Check for version update
         local current_version
-        current_version="$(cat "${REPO_ROOT}/.patchboard/VERSION" 2>/dev/null || echo "unknown")"
+        current_version="$(resolve_patchboard_version "$REPO_ROOT")"
         if [[ "$current_version" != "$PATCHBOARD_VERSION" && "$current_version" != "unknown" ]]; then
             log_warn "Version update: v${PATCHBOARD_VERSION} → v${current_version}"
             log_info "Restarting..."
@@ -722,8 +794,12 @@ cmd_status() {
     print_kv "Repo root" "$REPO_ROOT"
     print_kv "CLI" "${cli:-claude}"
     print_kv "Branch" "$branch"
-    print_kv "Version" "$PATCHBOARD_VERSION"
+    print_kv "Repo version" "$PATCHBOARD_VERSION"
+    print_kv "Shell version" "$PATCHBOARD_SHELL_VERSION"
+    print_kv "Tooling dir" "$SCRIPT_DIR"
+    print_kv "Shell dir" "$PATCHBOARD_SHELL_TOOLING_DIR"
     warn_if_branch_set_is_misaligned "$branch"
+    warn_if_shell_version_drift "$PATCHBOARD_SHELL_VERSION" "$PATCHBOARD_VERSION"
 
     # Selected session
     local selected

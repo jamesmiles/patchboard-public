@@ -1,9 +1,9 @@
 {
-  "version": "2.4.0",
-  "generated_at": "2026-03-22T08:10:10Z",
+  "version": "3.0.0",
+  "generated_at": "2026-03-22T08:43:55Z",
   "files": {
     "VERSION": {
-      "hash": "sha256:2ad7b0c3f0ede58c3165b7a8a5479e890a758d39bfe8683eaef50ce6afad7232",
+      "hash": "sha256:2985be8b28d3ade858e8d8fb4bc22f565b1bf6020dff982dce141f7721b9999c",
       "install": "always"
     },
     "agents/architect/index.md": {
@@ -389,7 +389,7 @@
       "install": "always"
     },
     "tooling/install.sh": {
-      "hash": "sha256:0b3c711354b86b9061629f6031fde609e28789eb0310c9a265314f8e12b60d99",
+      "hash": "sha256:1feceb04487af1509f84a88ba3eeda9b20564b167a4c9f461b553920b256408f",
       "install": "always"
     },
     "tooling/lib/agent.sh": {
@@ -429,7 +429,7 @@
       "install": "always"
     },
     "tooling/patchboard.bash": {
-      "hash": "sha256:b8d2a0cc59900976e4650bcafd871baa9f9efbaa0717d00d0468e82a6f39d06d",
+      "hash": "sha256:b66a067c0ad208b93f37f68c6eded1f5bc63ff97e17694fe0d307a8aef600816",
       "install": "always"
     },
     "tooling/patchboard.py": {
