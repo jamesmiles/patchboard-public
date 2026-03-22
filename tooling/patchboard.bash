@@ -115,6 +115,22 @@ warn_if_branch_set_is_misaligned() {
     fi
 }
 
+pull_latest_with_warning() {
+    local context="$1"
+    local pull_output=""
+    if ! pull_output=$(git -C "$REPO_ROOT" pull --rebase --quiet 2>&1); then
+        pull_output=$(printf '%s' "$pull_output" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ *//; s/ *$//')
+        if [[ -n "$pull_output" ]]; then
+            log_warn "${context} Failed to pull latest changes. Reason: ${pull_output}"
+        else
+            log_warn "${context} Failed to pull latest changes."
+        fi
+        return 1
+    fi
+
+    return 0
+}
+
 # ─── Commands ──────────────────────────────────────────────────────
 
 cmd_version() {
@@ -329,7 +345,7 @@ _start_session() {
     if ! ensure_on_default_branch; then
         return 1
     fi
-    git -C "$REPO_ROOT" pull --rebase --quiet 2>/dev/null || true
+    pull_latest_with_warning "[start]"
 
     run_session "$session_id" "$cli" "$model"
     local rc=$?
@@ -492,7 +508,7 @@ ${prompt}"
     log_info "Pushing session..."
     if ! git -C "$REPO_ROOT" push --quiet 2>/dev/null; then
         log_warn "Push failed, pulling and retrying..."
-        git -C "$REPO_ROOT" pull --rebase --quiet 2>/dev/null || true
+        pull_latest_with_warning "[enqueue]"
         if ! git -C "$REPO_ROOT" push --quiet 2>/dev/null; then
             log_bad "Failed to push session."
             return 1
@@ -503,8 +519,8 @@ ${prompt}"
     echo ""
 
     # ── Run it ───────────────────────────────────────────────────
-    ensure_on_main
-    git -C "$REPO_ROOT" pull --rebase --quiet 2>/dev/null || true
+    ensure_on_default_branch
+    pull_latest_with_warning "[enqueue]"
 
     run_session "$session_id" "$cli" "$model"
     local rc=$?
@@ -571,7 +587,9 @@ cmd_auto() {
             return 1
         fi
         log_dim "[${ts}] Pulling latest..."
-        git -C "$REPO_ROOT" pull --rebase --quiet 2>/dev/null || true
+        if ! pull_latest_with_warning "[${ts}]"; then
+            log_warn "[${ts}] Continuing despite pull failure."
+        fi
 
         # Check for version update
         local current_version
@@ -879,7 +897,7 @@ cmd_help() {
     table_row "healthcheck" "Run system healthchecks"
     table_row "list [type]" "List sessions, tasks, or prs"
     table_row "start [id]" "Start session, task, or PR (interactive if no id)"
-    table_row "auto [int] [max]" "Auto-poll and process queued sessions"
+    table_row "auto [int] [max]" "Pull latest changes and process queued sessions in FIFO order on the configured default branch"
     table_row "cli [name]" "Configure default CLI (claude/copilot/auto)"
     table_row "branch [name]" "Configure default branch"
     table_row "status" "Show settings and session state"

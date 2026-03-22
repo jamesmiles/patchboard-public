@@ -41,6 +41,22 @@ ensure_on_default_branch() {
     fi
 }
 
+pull_latest_with_warning() {
+    local context="$1"
+    local pull_output=""
+    if ! pull_output=$(git -C "$REPO_ROOT" pull --rebase --quiet 2>&1); then
+        pull_output=$(printf '%s' "$pull_output" | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ *//; s/ *$//')
+        if [[ -n "$pull_output" ]]; then
+            log_warn "${context} Failed to pull latest changes. Reason: ${pull_output}"
+        else
+            log_warn "${context} Failed to pull latest changes."
+        fi
+        return 1
+    fi
+
+    return 0
+}
+
 # ─── Claim protocol ───────────────────────────────────────────────
 
 claim_session() {
@@ -469,7 +485,7 @@ create_diagnostic_pr() {
     if ! ensure_on_default_branch; then
         return 1
     fi
-    git -C "$REPO_ROOT" pull --rebase --quiet 2>/dev/null || true
+    pull_latest_with_warning "[diagnostic]"
 
     local diag_branch="agent/diagnostic/${session_id}"
     if ! git -C "$REPO_ROOT" checkout -b "$diag_branch" --quiet 2>/dev/null; then
