@@ -23,17 +23,21 @@ generate_uuid() {
 
 # ─── Branch management ─────────────────────────────────────────────
 
-ensure_on_main() {
-    local main_branch
-    main_branch="${PATCHBOARD_BRANCH_OVERRIDE:-$(config_get "branch")}"
-    main_branch="${main_branch:-main}"
+ensure_on_default_branch() {
+    local default_branch
+    if ! default_branch=$(config_resolve_branch); then
+        return 1
+    fi
 
     local current
     current=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
 
-    if [[ "$current" != "$main_branch" ]]; then
-        log_info "Switching from '${current}' to ${main_branch}..."
-        git -C "$REPO_ROOT" checkout "$main_branch" --quiet 2>/dev/null || true
+    if [[ "$current" != "$default_branch" ]]; then
+        log_info "Switching from '${current}' to ${default_branch}..."
+        if ! git -C "$REPO_ROOT" checkout "$default_branch" --quiet 2>/dev/null; then
+            log_bad "Failed to switch to configured default branch '${default_branch}'."
+            return 1
+        fi
     fi
 }
 
@@ -324,25 +328,28 @@ post_run_verify() {
     local session_file
     session_file=$(ensure_session_dir "$session_id")
 
-    local current_branch main_branch
-    current_branch=$(git -C "$REPO_ROOT" branch --show-current 2>/dev/null || echo "main")
-    main_branch="${PATCHBOARD_BRANCH_OVERRIDE:-$(config_get "branch")}"
-    main_branch="${main_branch:-main}"
+    local current_branch default_branch
+    current_branch=$(git -C "$REPO_ROOT" branch --show-current 2>/dev/null || true)
+    current_branch="${current_branch:-unknown}"
+    if ! default_branch=$(config_resolve_branch); then
+        return 1
+    fi
 
     log_dim "Current branch: ${current_branch}"
 
-    if [[ "$current_branch" == "$main_branch" ]]; then
+    if [[ "$current_branch" == "$default_branch" ]]; then
         local head_msg dirty_files
         head_msg=$(git -C "$REPO_ROOT" log -1 --format="%s" 2>/dev/null || echo "")
         dirty_files=$(git -C "$REPO_ROOT" status --porcelain 2>/dev/null \
             | grep -vc "cloud-agents/${session_id}" || true)
 
         if [[ "$head_msg" == "agent: claim session ${session_id}" && "$dirty_files" -gt 0 && $agent_exit -eq 0 ]]; then
-            log_warn "Agent left ${dirty_files} uncommitted file(s) on ${main_branch}."
+            log_warn "Agent left ${dirty_files} uncommitted file(s) on ${default_branch}."
             if attempt_recovery "incomplete_delivery" "$current_branch"; then
                 local post_branch
-                post_branch=$(git -C "$REPO_ROOT" branch --show-current 2>/dev/null || echo "$main_branch")
-                if [[ "$post_branch" != "$main_branch" ]]; then
+                post_branch=$(git -C "$REPO_ROOT" branch --show-current 2>/dev/null || true)
+                post_branch="${post_branch:-$default_branch}"
+                if [[ "$post_branch" != "$default_branch" ]]; then
                     log_good "Recovery created branch '${post_branch}'"
                     current_branch="$post_branch"
                 else
@@ -454,11 +461,14 @@ create_diagnostic_pr() {
     fi
     update_session_status "$session_id" "$exit_code" "$error_detail"
 
-    local main_branch
-    main_branch="${PATCHBOARD_BRANCH_OVERRIDE:-$(config_get "branch")}"
-    main_branch="${main_branch:-main}"
+    local default_branch
+    if ! default_branch=$(config_resolve_branch); then
+        return 1
+    fi
 
-    ensure_on_main
+    if ! ensure_on_default_branch; then
+        return 1
+    fi
     git -C "$REPO_ROOT" pull --rebase --quiet 2>/dev/null || true
 
     local diag_branch="agent/diagnostic/${session_id}"
@@ -519,13 +529,13 @@ EOF
     git -C "$REPO_ROOT" add "$diag_file" "$session_file"
     if ! git -C "$REPO_ROOT" commit -m "agent: diagnostic report for ${session_id} (${failure_reason})" --quiet 2>/dev/null; then
         log_bad "Failed to commit diagnostic file."
-        git -C "$REPO_ROOT" checkout "$main_branch" --quiet 2>/dev/null || true
+        git -C "$REPO_ROOT" checkout "$default_branch" --quiet 2>/dev/null || true
         return 1
     fi
 
     if ! git -C "$REPO_ROOT" push -u origin "$diag_branch" --quiet 2>/dev/null; then
         log_bad "Failed to push diagnostic branch."
-        git -C "$REPO_ROOT" checkout "$main_branch" --quiet 2>/dev/null || true
+        git -C "$REPO_ROOT" checkout "$default_branch" --quiet 2>/dev/null || true
         return 1
     fi
 
@@ -554,7 +564,7 @@ EOF
         git -C "$REPO_ROOT" push --quiet 2>/dev/null || true
     fi
 
-    git -C "$REPO_ROOT" checkout "$main_branch" --quiet 2>/dev/null || true
+    git -C "$REPO_ROOT" checkout "$default_branch" --quiet 2>/dev/null || true
     return 0
 }
 
@@ -633,7 +643,9 @@ run_session() {
             fi
         fi
 
-        ensure_on_main
+        if ! ensure_on_default_branch; then
+            return 1
+        fi
     fi
 
     log_info "Session ${session_id} done (exit code: ${rc})."

@@ -11,18 +11,66 @@ _config_file() {
     echo "${REPO_ROOT}/.patchboard/tooling/state/config.json"
 }
 
+_config_log_init() {
+    local message="$1"
+    if declare -F log_warn >/dev/null 2>&1; then
+        log_warn "$message" >&2
+    else
+        echo "patchboard: ${message}" >&2
+    fi
+}
+
+_config_log_error() {
+    local message="$1"
+    if declare -F log_bad >/dev/null 2>&1; then
+        log_bad "$message" >&2
+    else
+        echo "patchboard: ${message}" >&2
+    fi
+}
+
+config_detect_default_branch() {
+    local remote_head
+    remote_head=$(git -C "$REPO_ROOT" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)
+    if [[ -n "$remote_head" ]]; then
+        printf '%s\n' "${remote_head#origin/}"
+        return 0
+    fi
+
+    local current_branch
+    current_branch=$(git -C "$REPO_ROOT" branch --show-current 2>/dev/null || true)
+    if [[ -n "$current_branch" ]]; then
+        printf '%s\n' "$current_branch"
+        return 0
+    fi
+
+    local candidate
+    for candidate in main master trunk; do
+        if git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/${candidate}" \
+            || git -C "$REPO_ROOT" show-ref --verify --quiet "refs/remotes/origin/${candidate}"; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+
+    printf '%s\n' "main"
+}
+
 # Ensure config file exists with defaults
 config_init() {
     local cfg
     cfg=$(_config_file)
     if [[ ! -f "$cfg" ]]; then
+        local default_branch
+        default_branch=$(config_detect_default_branch)
         mkdir -p "$(dirname "$cfg")"
-        cat > "$cfg" <<'EOF'
+        cat > "$cfg" <<EOF
 {
   "cli": "claude",
-  "branch": "main"
+  "branch": "${default_branch}"
 }
 EOF
+        _config_log_init "Project config not found. Initializing local config and using default branch '${default_branch}'."
     fi
 }
 
@@ -33,7 +81,38 @@ config_get() {
     local cfg
     cfg=$(_config_file)
     config_init
-    jq -r --arg k "$key" '.[$k] // empty' "$cfg" 2>/dev/null
+
+    local value
+    if ! value=$(jq -r --arg k "$key" '.[$k] // empty' "$cfg" 2>&1); then
+        _config_log_error "Failed to read config '${key}' from ${cfg}: ${value}"
+        return 1
+    fi
+
+    printf '%s\n' "$value"
+}
+
+config_get_required() {
+    local key="$1"
+    local cfg
+    cfg=$(_config_file)
+    config_init
+
+    local value
+    if ! value=$(jq -er --arg k "$key" '.[$k] // error("missing config key")' "$cfg" 2>&1); then
+        _config_log_error "Failed to read required config '${key}' from ${cfg}: ${value}"
+        return 1
+    fi
+
+    printf '%s\n' "$value"
+}
+
+config_resolve_branch() {
+    if [[ -n "${PATCHBOARD_BRANCH_OVERRIDE:-}" ]]; then
+        printf '%s\n' "$PATCHBOARD_BRANCH_OVERRIDE"
+        return 0
+    fi
+
+    config_get_required "branch"
 }
 
 # Set a config key

@@ -11,7 +11,7 @@
 #   start [id]   Start a session (accepts session/task/PR id, or interactive)
 #   auto         Auto-poll and process queued sessions
 #   cli          Configure default AI CLI
-#   branch       Configure main branch
+#   branch       Configure default branch
 #   status       Show current settings and session state
 #   upgrade      Pull latest tooling from the public repo
 #
@@ -71,14 +71,49 @@ _current_repo_branch() {
 
 warn_if_branch_misaligned() {
     local configured_branch="${1:-}"
-    configured_branch="${configured_branch:-$(config_get "branch")}"
-    configured_branch="${configured_branch:-main}"
+    if [[ -z "$configured_branch" ]]; then
+        if ! configured_branch=$(config_resolve_branch); then
+            return 1
+        fi
+    fi
 
     local current_branch
     current_branch=$(_current_repo_branch) || return 0
 
     if [[ "$configured_branch" != "$current_branch" ]]; then
-        log_warn "Configured branch '${configured_branch}' differs from current repo branch '${current_branch}'."
+        echo -e "  ${BAD_BOLD}Warning:${NC} configured branch '${configured_branch}' differs from current local repo branch '${current_branch}'."
+    fi
+}
+
+warn_if_remote_default_branch_differs() {
+    local configured_branch="$1"
+    local remote_default_branch
+    remote_default_branch=$(git -C "$REPO_ROOT" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)
+    remote_default_branch="${remote_default_branch#origin/}"
+
+    if [[ -z "$remote_default_branch" || "$configured_branch" == "$remote_default_branch" ]]; then
+        return 0
+    fi
+
+    echo -e "  ${BAD_BOLD}Warning:${NC} configured default branch '${configured_branch}' differs from actual git remote default branch '${remote_default_branch}'."
+}
+
+warn_if_branch_set_is_misaligned() {
+    local configured_branch="$1"
+    local current_branch remote_default_branch
+
+    current_branch=$(_current_repo_branch) || current_branch=""
+    remote_default_branch=$(git -C "$REPO_ROOT" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)
+    remote_default_branch="${remote_default_branch#origin/}"
+
+    if [[ -n "$remote_default_branch" && "$configured_branch" != "$remote_default_branch" ]]; then
+        warn_if_remote_default_branch_differs "$configured_branch"
+    fi
+
+    if [[ -n "$current_branch" && "$configured_branch" != "$current_branch" ]]; then
+        if [[ -z "$remote_default_branch" || "$current_branch" != "$remote_default_branch" ]]; then
+            warn_if_branch_misaligned "$configured_branch"
+        fi
     fi
 }
 
@@ -94,11 +129,13 @@ cmd_version() {
     # Show configured settings
     local cli branch
     cli=$(config_get "cli")
-    branch=$(config_get "branch")
+    if ! branch=$(config_resolve_branch); then
+        return 1
+    fi
     echo ""
     print_kv "CLI" "${cli:-claude}"
-    print_kv "Branch" "${branch:-main}"
-    warn_if_branch_misaligned "$branch"
+    print_kv "Branch" "$branch"
+    warn_if_branch_set_is_misaligned "$branch"
     echo ""
 }
 
@@ -291,7 +328,9 @@ _start_session() {
     fi
 
     echo ""
-    ensure_on_main
+    if ! ensure_on_default_branch; then
+        return 1
+    fi
     git -C "$REPO_ROOT" pull --rebase --quiet 2>/dev/null || true
 
     run_session "$session_id" "$cli" "$model"
@@ -495,8 +534,9 @@ cmd_auto() {
 
     local cli branch
     cli=$(config_get "cli")
-    branch=$(config_get "branch")
-    branch="${branch:-main}"
+    if ! branch=$(config_resolve_branch); then
+        return 1
+    fi
 
     # Cache branch for the duration of auto mode so it survives config deletion
     PATCHBOARD_BRANCH_OVERRIDE="$branch"
@@ -529,7 +569,9 @@ cmd_auto() {
         local ts
         ts=$(date -u '+%Y-%m-%d %H:%M:%SZ')
 
-        ensure_on_main
+        if ! ensure_on_default_branch; then
+            return 1
+        fi
         log_dim "[${ts}] Pulling latest..."
         git -C "$REPO_ROOT" pull --rebase --quiet 2>/dev/null || true
 
@@ -619,13 +661,14 @@ cmd_branch() {
     if [[ -n "$choice" ]]; then
         config_set "branch" "$choice"
         log_good "Branch set to: ${choice}"
-        warn_if_branch_misaligned "$choice"
+        warn_if_branch_set_is_misaligned "$choice"
     else
-        print_section "Select Main Branch"
+        print_section "Select Default Branch"
         echo ""
         local current
-        current=$(config_get "branch")
-        current="${current:-main}"
+        if ! current=$(config_resolve_branch); then
+            return 1
+        fi
 
         echo -e "  Current: ${BRAND}${current}${NC}"
         warn_if_branch_misaligned "$current"
@@ -644,7 +687,7 @@ cmd_branch() {
 
         config_set "branch" "$selected"
         log_good "Branch set to: ${selected}"
-        warn_if_branch_misaligned "$selected"
+        warn_if_branch_set_is_misaligned "$selected"
     fi
     echo ""
 }
@@ -657,12 +700,14 @@ cmd_status() {
     print_section "Settings"
     local cli branch
     cli=$(config_get "cli")
-    branch=$(config_get "branch")
+    if ! branch=$(config_resolve_branch); then
+        return 1
+    fi
     print_kv "Repo root" "$REPO_ROOT"
     print_kv "CLI" "${cli:-claude}"
-    print_kv "Branch" "${branch:-main}"
+    print_kv "Branch" "$branch"
     print_kv "Version" "$PATCHBOARD_VERSION"
-    warn_if_branch_misaligned "$branch"
+    warn_if_branch_set_is_misaligned "$branch"
 
     # Selected session
     local selected
@@ -838,7 +883,7 @@ cmd_help() {
     table_row "start [id]" "Start session, task, or PR (interactive if no id)"
     table_row "auto [int] [max]" "Auto-poll and process queued sessions"
     table_row "cli [name]" "Configure default CLI (claude/copilot/auto)"
-    table_row "branch [name]" "Configure main branch"
+    table_row "branch [name]" "Configure default branch"
     table_row "status" "Show settings and session state"
     table_row "upgrade [force]" "Pull latest tooling from public repo"
     table_row "help" "Show this help"
