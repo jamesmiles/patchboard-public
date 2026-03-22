@@ -88,8 +88,7 @@ warn_if_branch_misaligned() {
 warn_if_remote_default_branch_differs() {
     local configured_branch="$1"
     local remote_default_branch
-    remote_default_branch=$(git -C "$REPO_ROOT" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)
-    remote_default_branch="${remote_default_branch#origin/}"
+    remote_default_branch=$(config_detect_remote_default_branch 2>/dev/null || true)
 
     if [[ -z "$remote_default_branch" || "$configured_branch" == "$remote_default_branch" ]]; then
         return 0
@@ -103,8 +102,7 @@ warn_if_branch_set_is_misaligned() {
     local current_branch remote_default_branch
 
     current_branch=$(_current_repo_branch) || current_branch=""
-    remote_default_branch=$(git -C "$REPO_ROOT" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)
-    remote_default_branch="${remote_default_branch#origin/}"
+    remote_default_branch=$(config_detect_remote_default_branch 2>/dev/null || true)
 
     if [[ -n "$remote_default_branch" && "$configured_branch" != "$remote_default_branch" ]]; then
         warn_if_remote_default_branch_differs "$configured_branch"

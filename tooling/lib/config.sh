@@ -29,11 +29,27 @@ _config_log_error() {
     fi
 }
 
-config_detect_default_branch() {
+config_detect_remote_default_branch() {
     local remote_head
+    remote_head=$(git -C "$REPO_ROOT" remote show origin 2>/dev/null | sed -n 's/^  HEAD branch: //p' | head -n 1)
+    if [[ -n "$remote_head" && "$remote_head" != "(unknown)" ]]; then
+        printf '%s\n' "$remote_head"
+        return 0
+    fi
+
     remote_head=$(git -C "$REPO_ROOT" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)
     if [[ -n "$remote_head" ]]; then
         printf '%s\n' "${remote_head#origin/}"
+        return 0
+    fi
+
+    return 1
+}
+
+config_detect_default_branch() {
+    local remote_head
+    if remote_head=$(config_detect_remote_default_branch); then
+        printf '%s\n' "$remote_head"
         return 0
     fi
 
