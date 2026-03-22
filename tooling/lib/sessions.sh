@@ -193,11 +193,11 @@ select_session() {
         else
             sessions=$(discover_sessions "$filter")
             if [[ "$filter" == "queued" ]]; then
-                if ! echo "$sessions" | jq -e 'all(.[]; (.created_at // "") != "")' >/dev/null; then
-                    log_bad "Queued session missing required created_at timestamp."
+                if ! echo "$sessions" | jq -e 'all(.[]; ((.started_at // .created_at // "") != ""))' >/dev/null; then
+                    log_bad "Queued session missing required started_at/created_at timestamp."
                     return 1
                 fi
-                sessions=$(echo "$sessions" | jq 'sort_by(.created_at)')
+                sessions=$(echo "$sessions" | jq 'sort_by(.started_at // .created_at)')
             else
                 sessions=$(echo "$sessions" | jq 'sort_by(.started_at // .updated_at)')
             fi
