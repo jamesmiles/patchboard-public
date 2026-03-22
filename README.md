@@ -22,7 +22,7 @@ Patchboard is a git-native task management system designed for human-agent colla
     boards/kanban.yaml      Board configuration (columns, WIP limits, rules)
     roadmap.md              High-level milestones and progress
   state/                    Runtime state (session tracking, indexes)
-    cloud-agents/           Agent session manifests (JSON)
+    cloud-agents/           Agent session manifests (JSON tracked by git)
   vision/                   Project vision and principles
   schemas/                  JSON schemas for validation
   tooling/                  CLI tools and bot scripts (installed separately)
@@ -118,6 +118,8 @@ CLI tools and bot scripts are installed separately into `.patchboard/tooling/` v
 
 - `patchboard.py` — CLI for validation, indexing, and task search
 - `patchboard.bash` — Unified CLI for agent orchestration, session management, and task/PR listing
+
+Per-run agent transcripts and summaries are stored under `.patchboard/tooling/state/` so they do not dirty task branches during `patchboard auto`.
 
 ## Getting Started
 

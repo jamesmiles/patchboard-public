@@ -1,7 +1,11 @@
 {
-  "version": "2.2.0",
-  "generated_at": "2026-03-20T09:35:16Z",
+  "version": "2.4.0",
+  "generated_at": "2026-03-22T08:10:10Z",
   "files": {
+    "VERSION": {
+      "hash": "sha256:2ad7b0c3f0ede58c3165b7a8a5479e890a758d39bfe8683eaef50ce6afad7232",
+      "install": "always"
+    },
     "agents/architect/index.md": {
       "hash": "sha256:73e6434d1b3e8800e4c0429e2f6bf8fcb198bb94bb5965fcfe24aada030fdeb7",
       "install": "seed"
@@ -310,14 +314,6 @@
       "hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "install": "seed"
     },
-    "tasks/_templates/epic.template.md": {
-      "hash": "sha256:7477ae2a005d6228d77230a5512c6870c8de09194adbbe92034e060c40e2358e",
-      "install": "seed"
-    },
-    "tasks/_templates/task.template.md": {
-      "hash": "sha256:ba001fdf8971aa9ba14d9ab68b40506173bb889832f4c03c599baf0f8cd2a86d",
-      "install": "seed"
-    },
     "tasks/.archived/.gitkeep": {
       "hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "install": "seed"
@@ -372,8 +368,20 @@
       "install": "seed",
       "group": "setup-epic"
     },
+    "tasks/_templates/epic.template.md": {
+      "hash": "sha256:7477ae2a005d6228d77230a5512c6870c8de09194adbbe92034e060c40e2358e",
+      "install": "seed"
+    },
+    "tasks/_templates/task.template.md": {
+      "hash": "sha256:ba001fdf8971aa9ba14d9ab68b40506173bb889832f4c03c599baf0f8cd2a86d",
+      "install": "seed"
+    },
     "tooling/.gitignore": {
       "hash": "sha256:21e6c365259b45cc81dc60c8c673bb99653eb2efbc2602248a7bf91bfe7c8c08",
+      "install": "always"
+    },
+    "tooling/README.md": {
+      "hash": "sha256:f7ad2155baf8b9cbd2c002eb43dda05193ffdab117b4aa4e4f740c2731ef362f",
       "install": "always"
     },
     "tooling/agent-list.sh": {
@@ -385,7 +393,7 @@
       "install": "always"
     },
     "tooling/lib/agent.sh": {
-      "hash": "sha256:337bac95d678aa3727298d99845da3c4f27e6fcea15a8af2cb1df99ff435a159",
+      "hash": "sha256:8e7cd7103ddd460f4db581e3e431c46c3911d71ea20b3c583ba05db246bb946e",
       "install": "always"
     },
     "tooling/lib/colors.sh": {
@@ -393,7 +401,7 @@
       "install": "always"
     },
     "tooling/lib/config.sh": {
-      "hash": "sha256:d3eb1b6e604fc0df788727d7d8f54d558361616efa8e2b79f2479a221b6917d3",
+      "hash": "sha256:0c432afeea0926fd6ae64b18869109310c46005a271bb521d07f0a4d0da3d30e",
       "install": "always"
     },
     "tooling/lib/health.sh": {
@@ -409,7 +417,7 @@
       "install": "always"
     },
     "tooling/lib/sessions.sh": {
-      "hash": "sha256:e41681da74a503584fc6cea96260906b437ec25551745aa36a49a53497df97f6",
+      "hash": "sha256:ba994776eadf91c05f5d32d5966e11893fe739cfed1a02e2eac6fe54b665e563",
       "install": "always"
     },
     "tooling/lib/tasks.sh": {
@@ -421,7 +429,7 @@
       "install": "always"
     },
     "tooling/patchboard.bash": {
-      "hash": "sha256:9ad8407e00e38d410edb755a0cf0b173c73fcfeeea1e516a8cf919e8c3fe1bfd",
+      "hash": "sha256:b8d2a0cc59900976e4650bcafd871baa9f9efbaa0717d00d0468e82a6f39d06d",
       "install": "always"
     },
     "tooling/patchboard.py": {
@@ -430,10 +438,6 @@
     },
     "tooling/pr-screenshots.sh": {
       "hash": "sha256:e9bc01e623aee06e08d33de0ad18e4f0a58820116dcd0ace0b9f6f8415d8a4ab",
-      "install": "always"
-    },
-    "tooling/README.md": {
-      "hash": "sha256:f7ad2155baf8b9cbd2c002eb43dda05193ffdab117b4aa4e4f740c2731ef362f",
       "install": "always"
     },
     "tooling/requirements.txt": {
@@ -466,10 +470,6 @@
     },
     "tooling/workflows/patchboard-validate.yml": {
       "hash": "sha256:bdc0815779656b94a2acbd66b13b6693c70899a3f7d0e9378241a77ab57387fa",
-      "install": "always"
-    },
-    "VERSION": {
-      "hash": "sha256:c4a2383a03bdb6739d16a0e24058e4b9c7da4e63d203e0be2f448868cc03c530",
       "install": "always"
     }
   }

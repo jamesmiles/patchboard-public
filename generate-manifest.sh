@@ -45,6 +45,7 @@ is_skip() {
         .gitignore) return 0 ;;
         MANIFEST.json) return 0 ;;
         generate-manifest.sh) return 0 ;;
+        .patchboard/tooling/state/*) return 0 ;;
     esac
     return 1
 }

@@ -12,6 +12,13 @@ AGENT_CONV_ID=""
 AGENT_TIMEOUT="${AGENT_TIMEOUT:-86400}"
 AGENT_NON_INTERACTIVE="${AGENT_NON_INTERACTIVE:-true}"
 
+runtime_session_subdir() {
+    local session_id="$1"
+    local runtime_dir="${SCRIPT_DIR}/state/cloud-agents/${session_id}"
+    mkdir -p "$runtime_dir"
+    echo "$runtime_dir"
+}
+
 # ─── UUID generation ───────────────────────────────────────────────
 
 generate_uuid() {
@@ -185,9 +192,6 @@ IMPORTANT: You are running in a non-interactive, headless environment. There is 
                 if [[ -n "$extracted_id" ]]; then
                     AGENT_CONV_ID="$extracted_id"
                     log_dim "Captured session ID: ${AGENT_CONV_ID}"
-                    jq --arg conv_id "$AGENT_CONV_ID" \
-                       '.config.conversation_id = $conv_id' \
-                       "$session_file" > "${session_file}.tmp" && mv "${session_file}.tmp" "$session_file"
                 fi
             fi
         else
@@ -221,6 +225,7 @@ update_session_status() {
     local session_id="$1"
     local exit_code="$2"
     local stderr_content="${3:-}"
+    local pr_url="${4:-}"
     local session_file
     session_file=$(ensure_session_dir "$session_id")
     local now
@@ -229,13 +234,26 @@ update_session_status() {
     if [[ $exit_code -eq 0 ]]; then
         log_good "Marking session as completed."
         jq --arg now "$now" \
-           '.status = "completed" | .completed_at = $now | .updated_at = $now' \
+           --arg conv_id "$AGENT_CONV_ID" \
+           --arg pr_url "$pr_url" \
+           '.status = "completed"
+            | .completed_at = $now
+            | .updated_at = $now
+            | if $conv_id != "" then .config.conversation_id = $conv_id else . end
+            | if $pr_url != "" then .config.pr_url = $pr_url else . end' \
            "$session_file" > "${session_file}.tmp" && mv "${session_file}.tmp" "$session_file"
     else
         log_bad "Marking session as failed (exit code ${exit_code})."
         jq --arg now "$now" \
            --arg err "$stderr_content" \
-           '.status = "failed" | .completed_at = $now | .updated_at = $now | .error_message = $err' \
+           --arg conv_id "$AGENT_CONV_ID" \
+           --arg pr_url "$pr_url" \
+           '.status = "failed"
+            | .completed_at = $now
+            | .updated_at = $now
+            | .error_message = $err
+            | if $conv_id != "" then .config.conversation_id = $conv_id else . end
+            | if $pr_url != "" then .config.pr_url = $pr_url else . end' \
            "$session_file" > "${session_file}.tmp" && mv "${session_file}.tmp" "$session_file"
     fi
 
@@ -261,7 +279,8 @@ update_session_status() {
 
 cleanup_session_run_artifacts() {
     local session_id="$1"
-    local session_subdir="${SESSION_DIR}/${session_id}"
+    local session_subdir
+    session_subdir=$(runtime_session_subdir "$session_id")
     local stdout_tmp="/tmp/patchboard-stdout-${session_id}.txt"
     local stderr_tmp="/tmp/patchboard-stderr-${session_id}.txt"
     local diag_file="${SESSION_DIR}/${session_id}-diagnostic.md"
@@ -295,11 +314,11 @@ cleanup_session_run_artifacts() {
 persist_transcript() {
     local session_id="$1"
     local stdout_tmp="/tmp/patchboard-stdout-${session_id}.txt"
-    local session_subdir="${SESSION_DIR}/${session_id}"
+    local session_subdir
+    session_subdir=$(runtime_session_subdir "$session_id")
 
     if [[ ! -s "$stdout_tmp" ]]; then return; fi
 
-    mkdir -p "$session_subdir"
     mv "$stdout_tmp" "${session_subdir}/transcript.jsonl"
 
     # Summary
@@ -468,24 +487,39 @@ post_run_verify() {
         log_good "PR exists: ${pr_url}"
     fi
 
-    # Update status
+    # Update status on the default branch so management-plane state does not
+    # dirty the task branch and block checkout back to the orchestrator branch.
+    if [[ "$current_branch" != "$default_branch" ]]; then
+        if ! ensure_on_default_branch; then
+            return 1
+        fi
+    fi
+
     local current_status
     current_status=$(jq -r '.status // "unknown"' "$session_file" 2>/dev/null || echo "unknown")
 
     if [[ "$current_status" != "completed" && "$current_status" != "failed" && "$current_status" != "stopped" ]]; then
-        if [[ -n "$pr_url" ]]; then
-            jq --arg url "$pr_url" '.config.pr_url = $url' \
-               "$session_file" > "${session_file}.tmp" && mv "${session_file}.tmp" "$session_file"
-        fi
-        update_session_status "$session_id" "$agent_exit" "$stderr_content"
+        update_session_status "$session_id" "$agent_exit" "$stderr_content" "$pr_url"
     elif [[ -n "$pr_url" ]]; then
         local existing_pr
         existing_pr=$(jq -r '.config.pr_url // ""' "$session_file")
         if [[ -z "$existing_pr" ]]; then
-            jq --arg url "$pr_url" '.config.pr_url = $url' \
-               "$session_file" > "${session_file}.tmp" && mv "${session_file}.tmp" "$session_file"
+            if [[ -n "$AGENT_CONV_ID" ]]; then
+                jq --arg url "$pr_url" --arg conv_id "$AGENT_CONV_ID" \
+                   '.config.pr_url = $url | .config.conversation_id = $conv_id' \
+                   "$session_file" > "${session_file}.tmp" && mv "${session_file}.tmp" "$session_file"
+            else
+                jq --arg url "$pr_url" '.config.pr_url = $url' \
+                   "$session_file" > "${session_file}.tmp" && mv "${session_file}.tmp" "$session_file"
+            fi
             git -C "$REPO_ROOT" add "$session_file"
             git -C "$REPO_ROOT" commit -m "agent: session ${session_id} link PR" --quiet 2>/dev/null || true
+            git -C "$REPO_ROOT" push --quiet 2>/dev/null || true
+        elif [[ -n "$AGENT_CONV_ID" ]]; then
+            jq --arg conv_id "$AGENT_CONV_ID" '.config.conversation_id = $conv_id' \
+               "$session_file" > "${session_file}.tmp" && mv "${session_file}.tmp" "$session_file"
+            git -C "$REPO_ROOT" add "$session_file"
+            git -C "$REPO_ROOT" commit -m "agent: session ${session_id} link conversation" --quiet 2>/dev/null || true
             git -C "$REPO_ROOT" push --quiet 2>/dev/null || true
         fi
     fi
@@ -511,7 +545,6 @@ create_diagnostic_pr() {
     if [[ -n "$stdout_content" ]]; then
         error_detail="${error_detail} Agent output (last 2048 chars): ${stdout_content: -2048}"
     fi
-    update_session_status "$session_id" "$exit_code" "$error_detail"
 
     local default_branch
     if ! default_branch=$(config_resolve_branch); then
@@ -521,6 +554,7 @@ create_diagnostic_pr() {
     if ! ensure_on_default_branch; then
         return 1
     fi
+    update_session_status "$session_id" "$exit_code" "$error_detail"
     pull_latest_with_warning "[diagnostic]"
 
     local diag_branch="agent/diagnostic/${session_id}"
@@ -609,14 +643,16 @@ EOF
 
     if [[ -n "$pr_url" ]]; then
         log_good "Diagnostic PR: ${pr_url}"
+    fi
+
+    git -C "$REPO_ROOT" checkout "$default_branch" --quiet 2>/dev/null || true
+    if [[ -n "$pr_url" ]]; then
         jq --arg url "$pr_url" '.config.diagnostic_pr_url = $url' \
            "$session_file" > "${session_file}.tmp" && mv "${session_file}.tmp" "$session_file"
         git -C "$REPO_ROOT" add "$session_file"
         git -C "$REPO_ROOT" commit -m "agent: session ${session_id} link diagnostic PR" --quiet 2>/dev/null || true
         git -C "$REPO_ROOT" push --quiet 2>/dev/null || true
     fi
-
-    git -C "$REPO_ROOT" checkout "$default_branch" --quiet 2>/dev/null || true
     return 0
 }
 
