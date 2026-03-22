@@ -259,6 +259,39 @@ update_session_status() {
 
 # ─── Transcript management ────────────────────────────────────────
 
+cleanup_session_run_artifacts() {
+    local session_id="$1"
+    local session_subdir="${SESSION_DIR}/${session_id}"
+    local stdout_tmp="/tmp/patchboard-stdout-${session_id}.txt"
+    local stderr_tmp="/tmp/patchboard-stderr-${session_id}.txt"
+    local diag_file="${SESSION_DIR}/${session_id}-diagnostic.md"
+    local stale_found=false
+    local artifact
+
+    # Short-term: clear fixed per-run artifact paths before a rerun so one
+    # attempt cannot leak files into the next. Longer-term, these should move
+    # to per-attempt artifact directories instead of being overwritten in place.
+    for artifact in \
+        "${session_subdir}/transcript.jsonl" \
+        "${session_subdir}/transcript.jsonl.gz" \
+        "${session_subdir}/summary.txt" \
+        "$stdout_tmp" \
+        "$stderr_tmp" \
+        "$diag_file"; do
+        if [[ -e "$artifact" ]]; then
+            stale_found=true
+            if ! rm -f "$artifact"; then
+                log_bad "Failed to remove stale run artifact: ${artifact}"
+                return 1
+            fi
+        fi
+    done
+
+    if [[ "$stale_found" == "true" ]]; then
+        log_dim "Cleared stale run artifacts for ${session_id}"
+    fi
+}
+
 persist_transcript() {
     local session_id="$1"
     local stdout_tmp="/tmp/patchboard-stdout-${session_id}.txt"
@@ -280,7 +313,10 @@ persist_transcript() {
         jq -rj 'select(.type == "result") | .result // empty' "${session_subdir}/transcript.jsonl" 2>/dev/null || true
     } > "${session_subdir}/summary.txt"
 
-    gzip "${session_subdir}/transcript.jsonl" 2>/dev/null || true
+    # Issue encountered: on session re-runs, transcript.jsonl.gz may already
+    # exist. Plain gzip prompts before overwrite; with stderr redirected that
+    # prompt is invisible, so auto mode appears to hang silently until stopped.
+    gzip -f "${session_subdir}/transcript.jsonl" 2>/dev/null || true
 }
 
 # ─── Recovery ─────────────────────────────────────────────────────
@@ -613,6 +649,10 @@ run_session() {
         fi
     else
         log_bad "Session ${session_id} has unexpected status '${status}'."
+        return 1
+    fi
+
+    if ! cleanup_session_run_artifacts "$session_id"; then
         return 1
     fi
 
