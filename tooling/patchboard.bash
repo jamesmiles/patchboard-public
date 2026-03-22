@@ -55,6 +55,33 @@ _check_jq() {
     fi
 }
 
+_current_repo_branch() {
+    local current
+    current=$(git -C "$REPO_ROOT" branch --show-current 2>/dev/null || true)
+    if [[ -z "$current" ]]; then
+        current=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+    fi
+
+    if [[ -z "$current" || "$current" == "HEAD" ]]; then
+        return 1
+    fi
+
+    printf '%s\n' "$current"
+}
+
+warn_if_branch_misaligned() {
+    local configured_branch="${1:-}"
+    configured_branch="${configured_branch:-$(config_get "branch")}"
+    configured_branch="${configured_branch:-main}"
+
+    local current_branch
+    current_branch=$(_current_repo_branch) || return 0
+
+    if [[ "$configured_branch" != "$current_branch" ]]; then
+        log_warn "Configured branch '${configured_branch}' differs from current repo branch '${current_branch}'."
+    fi
+}
+
 # ─── Commands ──────────────────────────────────────────────────────
 
 cmd_version() {
@@ -71,6 +98,7 @@ cmd_version() {
     echo ""
     print_kv "CLI" "${cli:-claude}"
     print_kv "Branch" "${branch:-main}"
+    warn_if_branch_misaligned "$branch"
     echo ""
 }
 
@@ -585,6 +613,7 @@ cmd_branch() {
     if [[ -n "$choice" ]]; then
         config_set "branch" "$choice"
         log_good "Branch set to: ${choice}"
+        warn_if_branch_misaligned "$choice"
     else
         print_section "Select Main Branch"
         echo ""
@@ -593,6 +622,7 @@ cmd_branch() {
         current="${current:-main}"
 
         echo -e "  Current: ${BRAND}${current}${NC}"
+        warn_if_branch_misaligned "$current"
         echo ""
 
         prompt_choice "Choose branch" "main" "trunk" "master" "other"
@@ -608,6 +638,7 @@ cmd_branch() {
 
         config_set "branch" "$selected"
         log_good "Branch set to: ${selected}"
+        warn_if_branch_misaligned "$selected"
     fi
     echo ""
 }
@@ -625,6 +656,7 @@ cmd_status() {
     print_kv "CLI" "${cli:-claude}"
     print_kv "Branch" "${branch:-main}"
     print_kv "Version" "$PATCHBOARD_VERSION"
+    warn_if_branch_misaligned "$branch"
 
     # Selected session
     local selected
