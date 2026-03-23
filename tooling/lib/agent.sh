@@ -126,7 +126,7 @@ invoke_agent() {
         cli=$(config_resolve_cli "$session_model")
     fi
     if [[ -z "$model" ]]; then
-        model="${session_model:-$(config_default_model "$cli")}"
+        model=$(config_resolve_model "$cli" "$session_model")
     fi
 
     # Extract prompt
@@ -210,8 +210,8 @@ IMPORTANT: You are running in a non-interactive, headless environment. There is 
             agent_exit=${PIPESTATUS[0]}
         else
             $timeout_cmd copilot --model "$model" \
+                -p "$prompt" \
                 --yolo \
-                "$prompt"
             agent_exit=$?
         fi
     fi

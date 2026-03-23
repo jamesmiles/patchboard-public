@@ -1,9 +1,9 @@
 {
-  "version": "3.1.0",
-  "generated_at": "2026-03-23T13:27:10Z",
+  "version": "3.1.2",
+  "generated_at": "2026-03-23T13:51:29Z",
   "files": {
     "VERSION": {
-      "hash": "sha256:b2f44d3b6e29f8b1b73ea4735f006affc4d198e1fd9c7d50e736159b1ef636c6",
+      "hash": "sha256:905360921e63f419d6a111dd3216bf28402f367ab9aa69444d80e97419600d80",
       "install": "always"
     },
     "agents/architect/index.md": {
@@ -385,7 +385,7 @@
       "install": "always"
     },
     "tooling/agent-list.sh": {
-      "hash": "sha256:e2fb6160eae9f7e2c19e9bcd9c2b4db3773cca5615d3098b6f04a86ff9a9e385",
+      "hash": "sha256:de60190b6b3f0dc5e8efb57f0bbdb9308add54d10b4aa2303290155b0368dae8",
       "install": "always"
     },
     "tooling/install.sh": {
@@ -393,7 +393,7 @@
       "install": "always"
     },
     "tooling/lib/agent.sh": {
-      "hash": "sha256:11a8d2f5f910f153812daf86861189d387058ea9ffbfc8971c3913acb106f085",
+      "hash": "sha256:96ac01ef917fcfb54357e53306fbd28b00a95602899ec616ba4e3a10cccfb291",
       "install": "always"
     },
     "tooling/lib/colors.sh": {
@@ -401,7 +401,7 @@
       "install": "always"
     },
     "tooling/lib/config.sh": {
-      "hash": "sha256:0c432afeea0926fd6ae64b18869109310c46005a271bb521d07f0a4d0da3d30e",
+      "hash": "sha256:07e87936ee798e0e2d5816ffc5371e4d35eb6954157cbc54cf7d2cda29ecf8d7",
       "install": "always"
     },
     "tooling/lib/health.sh": {
@@ -429,7 +429,7 @@
       "install": "always"
     },
     "tooling/patchboard.bash": {
-      "hash": "sha256:1867b7bca394597670ae51741f22de8a7b5030f34514ffcc6034e5f8de37a531",
+      "hash": "sha256:9358be9bac1665891260be4f9016b95b8e39d0c386841752e5ce5fd9473ed980",
       "install": "always"
     },
     "tooling/patchboard.py": {

@@ -173,7 +173,37 @@ config_default_model() {
     local cli="${1:-claude}"
     case "$cli" in
         claude) echo "sonnet" ;;
-        copilot) echo "claude-sonnet-4.6" ;;
+        copilot) echo "gpt-5.4" ;;
         *) echo "sonnet" ;;
+    esac
+}
+
+# Resolve a session model to a concrete provider-compatible model.
+# Usage: config_resolve_model <cli> [session_model]
+config_resolve_model() {
+    local cli="${1:-claude}"
+    local session_model="${2:-}"
+
+    case "$cli" in
+        copilot)
+            case "$session_model" in
+                ""|default|sonnet|opus|haiku)
+                    config_default_model "$cli"
+                    ;;
+                *)
+                    printf '%s\n' "$session_model"
+                    ;;
+            esac
+            ;;
+        *)
+            case "$session_model" in
+                ""|default)
+                    config_default_model "$cli"
+                    ;;
+                *)
+                    printf '%s\n' "$session_model"
+                    ;;
+            esac
+            ;;
     esac
 }

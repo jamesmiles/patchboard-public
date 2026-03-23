@@ -396,7 +396,7 @@ _start_session() {
     session_model=$(jq -r '.model // empty' "$sf")
 
     cli=$(config_resolve_cli "$session_model")
-    model="${session_model:-$(config_default_model "$cli")}"
+    model=$(config_resolve_model "$cli" "$session_model")
 
     print_kv "Session" "$session_id"
     print_kv "Status" "$status"
@@ -541,6 +541,7 @@ ${prompt}"
             workspace_id: $workspace,
             model: $model,
             prompt: $prompt,
+            started_at: $now,
             created_at: $now,
             updated_at: $now,
             config: {}

@@ -80,7 +80,7 @@ check_prerequisites() {
 }
 
 # discover_sessions - Read and filter session JSON files
-# Outputs a JSON array of matching sessions sorted by started_at (oldest first)
+# Outputs a JSON array of matching sessions sorted by started_at/created_at (oldest first)
 discover_sessions() {
     local sessions="[]"
 
@@ -108,8 +108,8 @@ discover_sessions() {
             '[.[] | select(.status == $status) | select(.provider == $provider)]')
     fi
 
-    # Sort by started_at ascending (oldest first / FIFO)
-    sessions=$(echo "$sessions" | jq 'sort_by(.started_at)')
+    # Sort by started_at ascending (oldest first / FIFO), falling back to created_at.
+    sessions=$(echo "$sessions" | jq 'sort_by(.started_at // .created_at)')
 
     echo "$sessions"
 }
@@ -177,7 +177,7 @@ print_table() {
 
         workspace=$(echo "$row" | jq -r '.workspace_id // "—"')
         prompt=$(echo "$row" | jq -r '.prompt // ""' | tr '\n' ' ')
-        started_at=$(echo "$row" | jq -r '.started_at // ""')
+        started_at=$(echo "$row" | jq -r '.started_at // .created_at // ""')
 
         age=$(format_age "$started_at")
         prompt=$(truncate_str "$prompt" 50)
