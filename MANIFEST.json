@@ -1,9 +1,9 @@
 {
-  "version": "3.1.2",
-  "generated_at": "2026-03-23T13:51:29Z",
+  "version": "3.1.3",
+  "generated_at": "2026-03-23T14:01:37Z",
   "files": {
     "VERSION": {
-      "hash": "sha256:905360921e63f419d6a111dd3216bf28402f367ab9aa69444d80e97419600d80",
+      "hash": "sha256:2aaac27dade3045a30c64834f4c1ce9f5a5a4864c43e547bec804bc6e0186f43",
       "install": "always"
     },
     "agents/architect/index.md": {
@@ -393,7 +393,7 @@
       "install": "always"
     },
     "tooling/lib/agent.sh": {
-      "hash": "sha256:96ac01ef917fcfb54357e53306fbd28b00a95602899ec616ba4e3a10cccfb291",
+      "hash": "sha256:4ce5c18274aad60ae90e2892ad4109c8a9661c6575ed35fbc11938dfd8a20545",
       "install": "always"
     },
     "tooling/lib/colors.sh": {

@@ -211,7 +211,7 @@ IMPORTANT: You are running in a non-interactive, headless environment. There is 
         else
             $timeout_cmd copilot --model "$model" \
                 -p "$prompt" \
-                --yolo \
+                --yolo
             agent_exit=$?
         fi
     fi
