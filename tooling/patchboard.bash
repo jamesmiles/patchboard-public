@@ -606,7 +606,7 @@ _show_permissions() {
     if [[ "$cli" == "claude" ]]; then
         echo -e "    ${BAD}--dangerously-skip-permissions${NC} (full access)"
     else
-        echo -e "    ${BAD}--allow-all-tools${NC} (full access)"
+        echo -e "    ${BAD}--yolo${NC} (full access)"
     fi
     echo ""
 }

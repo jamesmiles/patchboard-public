@@ -205,12 +205,12 @@ IMPORTANT: You are running in a non-interactive, headless environment. There is 
         if [[ "$AGENT_NON_INTERACTIVE" == "true" ]]; then
             $timeout_cmd copilot --model "$model" \
                 -p "$prompt" \
-                --allow-all-tools \
+                --yolo \
                 2> >(tee "$stderr_file" >&2) | tee "$stdout_file"
             agent_exit=${PIPESTATUS[0]}
         else
             $timeout_cmd copilot --model "$model" \
-                --allow-all-tools \
+                --yolo \
                 "$prompt"
             agent_exit=$?
         fi
@@ -373,7 +373,7 @@ attempt_recovery() {
         log_info "Resuming Copilot session..."
         copilot --continue \
             -p "$recovery_prompt" \
-            --allow-all-tools \
+            --yolo \
             2>/dev/null || recovery_exit=$?
     else
         log_warn "No conversation ID — skipping recovery."

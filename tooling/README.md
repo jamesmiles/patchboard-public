@@ -157,10 +157,10 @@ Claude can still request additional permissions during execution (in interactive
 
 Copilot CLI does **not** support granular permissions. The options are:
 
-- `--allow-all-tools` — Full access to everything (required for non-interactive mode)
+- `--yolo` — Full access to everything (used by Patchboard for autonomous runs)
 - `--allow-tool 'shell(git:*)'` — Granular but must be repeated per tool
 
-For autonomous operation, we use `--allow-all-tools` and warn users accordingly.
+For autonomous operation, we use `--yolo` and warn users accordingly.
 
 ### Adding New Bot Scripts
 
@@ -181,7 +181,7 @@ show_permissions_and_confirm() {
         echo "The following tools will be pre-approved:"
         # List specific --allowedTools
     else
-        echo "Copilot will run with --allow-all-tools"
+        echo "Copilot will run with --yolo"
         echo "This grants full access to everything."
     fi
     
